@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Wallet, TrendingUp, Award, MoreVertical, Shield, Instagram,
-  Lock,Package, Tag, Coins, Trophy, Settings, CheckCircle, 
-  MessageSquare, 
-  LogOut,  
+  Lock,Package, Tag, Coins, Trophy, Settings, CheckCircle, AlertTriangle,
+  MessageSquare, Search, User, ChevronDown, ChevronUp, ChevronRight, Check,
+  LogOut, Copy, X, Menu, Plus, Edit, Trash2, Upload, XCircle,
   Star} from 'lucide-react';
 // Mock Firebase auth functions
 const mockAuth = {
@@ -26,924 +26,924 @@ const CartContext = React.createContext({
   wishlistItems: []
 });
 
-// Binary Tree Node class
+ // Binary Tree Node class
 class TreeNode {
-  constructor(id, name, email, userType, level = 0) {
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.userType = userType;
-    this.level = level;
-    this.left = null;
-    this.right = null;
-    this.parent = null;
-    this.directReferrals = []; // IDs of ALL direct children (not just left/right)
-    this.directParentId = null; // Who referred this user
-    this.directIncome = 0;
-    this.indirectIncome = 0;
-    this.totalSales = 0;
-    this.leftSubtreeSales = 0;
-    this.rightSubtreeSales = 0;
-    this.carryForwardLeft = 0;
-    this.carryForwardRight = 0;
-    this.height = 1;
-    this.brandName = "";
-    // New properties for dashboard
-    this.kycVerified = false;
-    this.kycData = null;
-    this.bankAccount = null;
-    this.mobile = "";
-    this.joinDate = new Date().toISOString().split('T')[0];
-    this.products = [];
-    // New properties for credit wallet system
-    this.creditWallet = 0;
-    this.creditHistory = [];
-    this.franchiseATurnover = 0; // Track turnover from direct children in left side
-    this.franchiseBTurnover = 0; // Track turnover from direct children in right side
-    // Initialize eWallet to 0
-    this.eWallet = 0;
-    // Track original logical parent for customers moved due to brand owner insertion
-    this.logicalParentId = null;
-  }
+constructor(id, name, email, userType, level = 0) {
+this.id = id;
+this.name = name;
+this.email = email;
+this.userType = userType;
+this.level = level;
+this.left = null;
+this.right = null;
+this.parent = null;
+this.directReferrals = []; // IDs of ALL direct children (not just left/right)
+this.directParentId = null; // Who referred this user
+this.directIncome = 0;
+this.indirectIncome = 0;
+this.totalSales = 0;
+this.leftSubtreeSales = 0;
+this.rightSubtreeSales = 0;
+this.carryForwardLeft = 0;
+this.carryForwardRight = 0;
+this.height = 1;
+this.brandName = "";
+// New properties for dashboard
+this.kycVerified = false;
+this.kycData = null;
+this.bankAccount = null;
+this.mobile = "";
+this.joinDate = new Date().toISOString().split('T')[0];
+this.products = [];
+// New properties for credit wallet system
+this.creditWallet = 0;
+this.creditHistory = [];
+this.franchiseATurnover = 0; // Track turnover from direct children in left side
+this.franchiseBTurnover = 0; // Track turnover from direct children in right side
+// Initialize eWallet to 0
+this.eWallet = 0;
+// Track original logical parent for customers moved due to brand owner insertion
+this.logicalParentId = null;
+}
 }
 
 // MLM Tree Manager
 class MLMTreeManager {
-  constructor() {
-    this.allNodes = new Map();
-    this.usersByEmail = new Map();
-    this.root = null;
-    this.initializeFounders();
-  }
-
-  initializeFounders() {
-    // Level 0 - Root Founder
-    const founder0 = new TreeNode("FOUND001", "Founder Alpha", "founder1@engineers.com", "founder", 0);
-    
-    // Level 1 - Two Founders
-    const founder1 = new TreeNode("FOUND002", "Founder Beta", "founder2@engineers.com", "founder", 1);
-    const founder2 = new TreeNode("FOUND003", "Founder Gamma", "founder3@engineers.com", "founder", 1);
-    
-    // Set up tree structure
-    founder0.left = founder1;
-    founder0.right = founder2;
-    founder1.parent = founder0;
-    founder2.parent = founder0;
-    
-    // Set direct parent relationships
-    founder1.directParentId = "FOUND001";
-    founder2.directParentId = "FOUND001";
-    founder0.directReferrals = ["FOUND002", "FOUND003"];
-    
-    this.root = founder0;
-    
-    // Add to maps
-    this.allNodes.set("FOUND001", founder0);
-    this.allNodes.set("FOUND002", founder1);
-    this.allNodes.set("FOUND003", founder2);
-    
-    this.usersByEmail.set("founder1@engineers.com", founder0);
-    this.usersByEmail.set("founder2@engineers.com", founder1);
-    this.usersByEmail.set("founder3@engineers.com", founder2);
-  }
-
-  // Find next available position in a subtree using BFS
-  findNextPositionInSubtree(subtreeRoot) {
-    const queue = [subtreeRoot];
-    
-    while (queue.length > 0) {
-      const current = queue.shift();
-      
-      if (!current.left) {
-        return { node: current, position: 'left' };
-      }
-      if (!current.right) {
-        return { node: current, position: 'right' };
-      }
-      
-      if (current.left) queue.push(current.left);
-      if (current.right) queue.push(current.right);
-    }
-    
-    return null;
-  }
-
-  // Find next available position for CUSTOMER using BFS (entire tree)
-  getNextCustomerParentInfo() {
-    const queue = [this.root];
-    
-    while (queue.length > 0) {
-      const current = queue.shift();
-      
-      if (!current.left) {
-        return { parentId: current.id, parentName: current.name, position: 'left' };
-      }
-      if (!current.right) {
-        return { parentId: current.id, parentName: current.name, position: 'right' };
-      }
-      
-      if (current.left) queue.push(current.left);
-      if (current.right) queue.push(current.right);
-    }
-    
-    return null;
-  }
-
-  // Find next available position for BRAND OWNER (only under founders and brand owners)
-  getNextBrandOwnerParentInfo() {
-    const queue = [this.root];
-    
-    while (queue.length > 0) {
-      const current = queue.shift();
-      
-      // Only place brand owners under founders or other brand owners
-      if (current.userType === 'founder' || current.userType === 'brand_owner') {
-        if (!current.left) {
-          return { 
-            parentId: current.id, 
-            parentName: current.name, 
-            position: 'left',
-            replacingCustomer: null
-          };
-        }
-        
-        if (current.left && current.left.userType === 'customer') {
-          return {
-            parentId: current.id,
-            parentName: current.name,
-            position: 'left',
-            replacingCustomer: current.left
-          };
-        }
-        
-        if (!current.right) {
-          return { 
-            parentId: current.id, 
-            parentName: current.name, 
-            position: 'right',
-            replacingCustomer: null
-          };
-        }
-        
-        if (current.right && current.right.userType === 'customer') {
-          return {
-            parentId: current.id,
-            parentName: current.name,
-            position: 'right',
-            replacingCustomer: current.right
-          };
-        }
-      }
-      
-      if (current.left) queue.push(current.left);
-      if (current.right) queue.push(current.right);
-    }
-    
-    return null;
-  }
-
-  generateNextUserId(userType) {
-    let prefix = 'CUST';
-    if (userType === 'brand_owner') prefix = 'BRAND';
-    if (userType === 'founder') prefix = 'FOUND';
-    
-    const userIds = Array.from(this.allNodes.keys())
-      .filter(id => id.startsWith(prefix))
-      .map(id => {
-        const numPart = id.replace(prefix, '');
-        return parseInt(numPart) || 0;
-      })
-      .sort((a, b) => b - a);
-    
-    const nextNumber = userIds.length > 0 ? userIds[0] + 1 : 1;
-    return `${prefix}${String(nextNumber).padStart(3, '0')}`;
-  }
-
-  registerCustomer(name, email, password, contact, dateOfBirth, manualParentId = null) {
-    let directParent = null;
-    let placementParent = null;
-    let position = null;
-    
-    if (manualParentId) {
-      directParent = this.allNodes.get(manualParentId);
-      if (!directParent) {
-        return { success: false, error: "Invalid parent ID" };
-      }
-      
-      // Always use BFS to find the next available position in the parent's subtree
-      const positionInfo = this.findNextPositionInSubtree(directParent);
-      
-      if (!positionInfo) {
-        return { success: false, error: "No available position in parent's subtree" };
-      }
-      
-      placementParent = positionInfo.node;
-      position = positionInfo.position;
-    } else {
-      // Global BFS for customers without referrals
-      const parentInfo = this.getNextCustomerParentInfo();
-      
-      if (!parentInfo) {
-        return { success: false, error: "No available position in tree" };
-      }
-
-      placementParent = this.allNodes.get(parentInfo.parentId);
-      directParent = placementParent;
-      position = parentInfo.position;
-      
-      if (!placementParent) {
-        return { success: false, error: "Parent node not found" };
-      }
-    }
-
-    const newUserId = this.generateNextUserId('customer');
-    const newUser = new TreeNode(newUserId, name, email, 'customer', placementParent.level + 1);
-    newUser.directParentId = directParent.id;
-    newUser.mobile = contact;
-
-    // Place in tree structure
-    if (position === 'left') {
-      placementParent.left = newUser;
-    } else {
-      placementParent.right = newUser;
-    }
-    newUser.parent = placementParent;
-
-    // Give direct income to the DIRECT parent (who referred them)
-    const purchaseAmount = 1000;
-    const directIncome = purchaseAmount * 0.05;
-    directParent.directIncome += directIncome;
-    directParent.totalSales += purchaseAmount;
-    directParent.directReferrals.push(newUserId);
-
-    // Update franchise turnover for the direct parent
-    if (position === 'left') {
-      directParent.franchiseATurnover += purchaseAmount;
-    } else {
-      directParent.franchiseBTurnover += purchaseAmount;
-    }
-
-    this.allNodes.set(newUserId, newUser);
-    this.usersByEmail.set(email, newUser);
-
-    return {
-      success: true,
-      userId: newUserId,
-      directParentId: directParent.id,
-      directParentName: directParent.name,
-      placementParentId: placementParent.id,
-      placementParentName: placementParent.name,
-      level: newUser.level,
-      position: position,
-      isThirdPlusChild: directParent.id !== placementParent.id
-    };
-  }
-
-  registerBrandOwner(name, email, password, contact, brandName, businessRegNo, gstNo) {
-    const parentInfo = this.getNextBrandOwnerParentInfo();
-    
-    if (!parentInfo) {
-      return { success: false, error: "No available position for brand owner" };
-    }
-
-    const parent = this.allNodes.get(parentInfo.parentId);
-    if (!parent) {
-      return { success: false, error: "Parent node not found" };
-    }
-
-    const newUserId = this.generateNextUserId('brand_owner');
-    const newUser = new TreeNode(newUserId, name, email, 'brand_owner', parent.level + 1);
-    newUser.brandName = brandName;
-    newUser.directParentId = parent.id;
-    newUser.mobile = contact;
-
-    const replacedCustomer = parentInfo.replacingCustomer;
-    let movedCustomerInfo = null;
-
-    if (parentInfo.position === 'left') {
-      parent.left = newUser;
-    } else {
-      parent.right = newUser;
-    }
-    newUser.parent = parent;
-
-    if (replacedCustomer) {
-      // Remove customer from parent's direct referrals
-      const index = parent.directReferrals.indexOf(replacedCustomer.id);
-      if (index > -1) {
-        parent.directReferrals.splice(index, 1);
-      }
-      
-      // Place customer as left child of the new brand owner
-      newUser.left = replacedCustomer;
-      replacedCustomer.parent = newUser;
-      replacedCustomer.level = newUser.level + 1;
-      
-      // Set logical parent to maintain income flow
-      replacedCustomer.logicalParentId = parent.id;
-      
-      // Add customer to brand owner's direct referrals
-      newUser.directReferrals.push(replacedCustomer.id);
-      replacedCustomer.directParentId = newUser.id;
-      
-      movedCustomerInfo = {
-        customerId: replacedCustomer.id,
-        customerName: replacedCustomer.name,
-        newPosition: 'left',
-        logicalParentId: parent.id,
-        logicalParentName: parent.name
-      };
-    }
-
-    const purchaseAmount = 5000;
-    const directIncome = purchaseAmount * 0.05;
-    parent.directIncome += directIncome;
-    parent.totalSales += purchaseAmount;
-    parent.directReferrals.push(newUserId);
-
-    // Update franchise turnover for the parent
-    if (parentInfo.position === 'left') {
-      parent.franchiseATurnover += purchaseAmount;
-    } else {
-      parent.franchiseBTurnover += purchaseAmount;
-    }
-
-    this.allNodes.set(newUserId, newUser);
-    this.usersByEmail.set(email, newUser);
-
-    return {
-      success: true,
-      userId: newUserId,
-      brandName: brandName,
-      parentId: parent.id,
-      parentName: parent.name,
-      level: newUser.level,
-      position: parentInfo.position,
-      replacedCustomer: movedCustomerInfo
-    };
-  }
-
-  /**
-   * A robust method to swap two nodes in the binary tree.
-   * This correctly handles all cases, including swapping a parent with its child,
-   * and ensures no nodes are lost from the tree structure.
-   * @param {TreeNode} nodeA - The first node to swap.
-   * @param {TreeNode} nodeB - The second node to swap.
-   */
-  swapNodes(nodeA, nodeB) {
-    if (nodeA === nodeB) return;
-
-    const parentA = nodeA.parent;
-    const parentB = nodeB.parent;
-    
-    const posA = parentA ? (parentA.left === nodeA ? 'left' : 'right') : null;
-    const posB = parentB ? (parentB.left === nodeB ? 'left' : 'right') : null;
-
-    // Store original children
-    const leftA = nodeA.left;
-    const rightA = nodeA.right;
-    const leftB = nodeB.left;
-    const rightB = nodeB.right;
-
-    // 1. Detach nodes from their old parents
-    if (parentA) parentA[posA] = null;
-    if (parentB) parentB[posB] = null;
-
-    // 2. Re-attach nodes to their new parents
-    if (parentA) parentA[posA] = nodeB;
-    if (parentB) parentB[posB] = nodeA;
-
-    // 3. Swap children pointers, ensuring a node doesn't become its own child
-    nodeA.left = (leftB === nodeA) ? nodeB : leftB;
-    nodeA.right = (rightB === nodeA) ? nodeB : rightB;
-    nodeB.left = (leftA === nodeB) ? nodeA : leftA;
-    nodeB.right = (rightA === nodeB) ? nodeA : rightA;
-    
-    // 4. Update parent pointers of all children
-    if (nodeA.left) nodeA.left.parent = nodeA;
-    if (nodeA.right) nodeA.right.parent = nodeA;
-    if (nodeB.left) nodeB.left.parent = nodeB;
-    if (nodeB.right) nodeB.right.parent = nodeB;
-    
-    // 5. Swap parent pointers
-    nodeA.parent = parentB;
-    nodeB.parent = parentA;
-
-    // 6. Swap levels
-    const levelA = nodeA.level;
-    nodeA.level = nodeB.level;
-    nodeB.level = levelA;
-
-    // 7. Update root if necessary
-    if (this.root === nodeA) {
-      this.root = nodeB;
-    } else if (this.root === nodeB) {
-      this.root = nodeA;
-    }
-
-    // 8. Update levels for all nodes in the swapped subtrees
-    const updateSubtreeLevels = (node) => {
-      if (!node) return;
-      const queue = [node];
-      while (queue.length > 0) {
-        const current = queue.shift();
-        if (current.left) {
-          current.left.level = current.level + 1;
-          queue.push(current.left);
-        }
-        if (current.right) {
-          current.right.level = current.level + 1;
-          queue.push(current.right);
-        }
-      }
-    };
-    updateSubtreeLevels(nodeA);
-    updateSubtreeLevels(nodeB);
-  }
-
-  /**
-   * Restructures the tree based on income, but only for customers.
-   * @returns {Array} An array of objects detailing the swaps that occurred.
-   */
-  restructureTreeBasedOnIncome() {
-    const performedSwaps = [];
-    const maxIterations = this.allNodes.size * 2; // Safeguard
-    let iterations = 0;
-    let swapHappened = true;
-
-    while (swapHappened && iterations < maxIterations) {
-      iterations++;
-      swapHappened = false;
-      const nodesByLevel = Array.from(this.allNodes.values()).sort((a, b) => b.level - a.level);
-
-      for (const node of nodesByLevel) {
-        // Only consider swaps if both the node and its parent are 'customers'
-        if (node === this.root || !node.parent || node.userType !== 'customer' || node.parent.userType !== 'customer') {
-          continue;
-        }
-
-        const totalIncome = node.directIncome + node.indirectIncome;
-        const parentTotalIncome = node.parent.directIncome + node.parent.indirectIncome;
-
-        if (totalIncome > parentTotalIncome) {
-          performedSwaps.push({
-            childId: node.id,
-            childName: node.name,
-            childIncome: totalIncome,
-            parentId: node.parent.id,
-            parentName: node.parent.name,
-            parentIncome: parentTotalIncome
-          });
-          
-          this.swapNodes(node, node.parent);
-          swapHappened = true;
-          break; // Restart the check from the bottom
-        }
-      }
-    }
-
-    if (iterations >= maxIterations) {
-        console.error("Tree restructuring stopped due to exceeding maximum iterations. A logical error may exist.");
-    }
-
-    return performedSwaps;
-  }
-
-  // Calculate Reward Credits based on turnover
-  calculateRewardCredits(turnover) {
-    let credits = 0;
-    let remainingTurnover = turnover;
-    
-    // First slab: ₹0 to ₹200,000 = 10 credits
-    if (remainingTurnover > 0) {
-      const firstSlab = Math.min(remainingTurnover, 200000);
-      if (firstSlab >= 200000) {
-        credits += 10;
-        remainingTurnover -= 200000;
-      } else {
-        return 0; // Not enough for first slab
-      }
-    }
-    
-    // Second slab: ₹200,001 to ₹700,000 = 15 credits
-    if (remainingTurnover > 0) {
-      const secondSlab = Math.min(remainingTurnover, 500000);
-      if (secondSlab >= 500000) {
-        credits += 15;
-        remainingTurnover -= 500000;
-      } else {
-        return credits; // Return credits earned so far
-      }
-    }
-    
-    // Third slab: ₹700,001 to ₹1,700,000 = 20 credits
-    if (remainingTurnover > 0) {
-      const thirdSlab = Math.min(remainingTurnover, 1000000);
-      if (thirdSlab >= 1000000) {
-        credits += 20;
-        remainingTurnover -= 1000000;
-      } else {
-        return credits; // Return credits earned so far
-      }
-    }
-    
-    // Fourth slab: Every additional ₹2,000,000 = 25 credits
-    if (remainingTurnover > 0) {
-      const fourthSlabCredits = Math.floor(remainingTurnover / 2000000) * 25;
-      credits += fourthSlabCredits;
-    }
-    
-    return credits;
-  }
-
-  // Calculate franchise turnover (only from direct children)
-  calculateFranchiseTurnover(userId, franchise) {
-    const user = this.allNodes.get(userId);
-    if (!user) return 0;
-    
-    if (franchise === 'A') {
-      return user.franchiseATurnover;
-    } else if (franchise === 'B') {
-      return user.franchiseBTurnover;
-    }
-    
-    return 0;
-  }
-
-  // Update credit wallet with new credits
-  updateCreditWallet(userId, credits, franchise, turnover) {
-    const user = this.allNodes.get(userId);
-    if (!user) return { success: false, error: "User not found" };
-    
-    const previousCredits = user.creditWallet;
-    user.creditWallet += credits;
-    
-    // Add to credit history
-    const creditEntry = {
-      date: new Date().toLocaleDateString(),
-      franchise: franchise,
-      turnover: turnover,
-      creditsEarned: credits,
-      totalCredits: user.creditWallet
-    };
-    
-    user.creditHistory.push(creditEntry);
-    
-    return { 
-      success: true, 
-      previousCredits: previousCredits,
-      currentCredits: user.creditWallet,
-      creditsAdded: credits
-    };
-  }
-
-  monthlyConsolidation() {
-    const allUsers = Array.from(this.allNodes.values());
-    const creditAllocations = [];
-    
-    // Step 1: Calculate all indirect incomes based on balanced volume.
-    allUsers.forEach(user => {
-      user.leftSubtreeSales = this.calculateSubtreeSales(user.left);
-      user.rightSubtreeSales = this.calculateSubtreeSales(user.right);
-
-      user.leftSubtreeSales += user.carryForwardLeft;
-      user.rightSubtreeSales += user.carryForwardRight;
-
-      const balancedVolume = Math.min(user.leftSubtreeSales, user.rightSubtreeSales);
-      
-      // IMPORTANT FIX: Brand owners earn ONLY direct income, not indirect income
-      if (balancedVolume > 0 && user.userType !== 'brand_owner') {
-        user.indirectIncome += balancedVolume * 0.05;
-      }
-
-      user.carryForwardLeft = user.leftSubtreeSales - balancedVolume;
-      user.carryForwardRight = user.rightSubtreeSales - balancedVolume;
-    });
-
-    // Step 2: Calculate and allocate reward credits based on franchise turnover
-    allUsers.forEach(user => {
-      if (user.userType === 'customer') {
-        // Calculate credits for Franchise A (left side)
-        const creditsFromA = this.calculateRewardCredits(user.franchiseATurnover);
-        if (creditsFromA > 0) {
-          const creditResult = this.updateCreditWallet(user.id, creditsFromA, 'A', user.franchiseATurnover);
-          if (creditResult.success) {
-            creditAllocations.push({
-              userId: user.id,
-              userName: user.name,
-              franchise: 'A',
-              turnover: user.franchiseATurnover,
-              creditsAllocated: creditsFromA,
-              totalCredits: user.creditWallet
-            });
-          }
-        }
-        
-        // Calculate credits for Franchise B (right side)
-        const creditsFromB = this.calculateRewardCredits(user.franchiseBTurnover);
-        if (creditsFromB > 0) {
-          const creditResult = this.updateCreditWallet(user.id, creditsFromB, 'B', user.franchiseBTurnover);
-          if (creditResult.success) {
-            creditAllocations.push({
-              userId: user.id,
-              userName: user.name,
-              franchise: 'B',
-              turnover: user.franchiseBTurnover,
-              creditsAllocated: creditsFromB,
-              totalCredits: user.creditWallet
-            });
-          }
-        }
-      }
-    });
-
-    // Step 3: Perform tree restructuring based on new total incomes.
-    const performedSwaps = this.restructureTreeBasedOnIncome();
-
-    return { 
-      message: "Monthly consolidation completed", 
-      totalUsers: allUsers.length,
-      swapsPerformed: performedSwaps.length,
-      swapDetails: performedSwaps,
-      creditAllocations: creditAllocations
-    };
-  }
-
-  calculateSubtreeSales(node) {
-    if (!node) return 0;
-    return node.totalSales + 
-           this.calculateSubtreeSales(node.left) + 
-           this.calculateSubtreeSales(node.right);
-  }
-
-  getTreeVisualization() {
-    const result = [];
-    const queue = [{ node: this.root, level: 0 }];
-    
-    while (queue.length > 0) {
-      const { node, level } = queue.shift();
-      
-      if (!result[level]) result[level] = [];
-      
-      const directParentNode = node.directParentId ? this.allNodes.get(node.directParentId) : null;
-      const logicalParentNode = node.logicalParentId ? this.allNodes.get(node.logicalParentId) : null;
-      
-      result[level].push({
-        id: node.id,
-        name: node.name,
-        email: node.email,
-        userType: node.userType,
-        brandName: node.brandName || '',
-        hasLeft: !!node.left,
-        hasRight: !!node.right,
-        leftChildId: node.left ? node.left.id : null,
-        rightChildId: node.right ? node.right.id : null,
-        directReferralsCount: node.directReferrals.length,
-        directReferralIds: node.directReferrals,
-        directParentId: node.directParentId,
-        directParentName: directParentNode ? directParentNode.name : '',
-        logicalParentId: node.logicalParentId,
-        logicalParentName: logicalParentNode ? logicalParentNode.name : '',
-        directIncome: node.directIncome,
-        indirectIncome: node.indirectIncome,
-        totalSales: node.totalSales,
-        level: node.level,
-        creditWallet: node.creditWallet,
-        franchiseATurnover: node.franchiseATurnover,
-        franchiseBTurnover: node.franchiseBTurnover,
-        eWallet: node.eWallet || 0,
-        hasMovedPosition: !!node.logicalParentId
-      });
-      
-      if (node.left) queue.push({ node: node.left, level: level + 1 });
-      if (node.right) queue.push({ node: node.right, level: level + 1 });
-    }
-    
-    return result;
-  }
-
-  getUserById(userId) {
-    return this.allNodes.get(userId);
-  }
-
-  // New methods for dashboard functionality
-  updateKYC(userId, kycData) {
-    const user = this.allNodes.get(userId);
-    if (!user) return { success: false, error: "User not found" };
-    
-    user.kycData = kycData;
-    user.kycVerified = true;
-    return { success: true };
-  }
-
-  addBankAccount(userId, bankData) {
-    const user = this.allNodes.get(userId);
-    if (!user) return { success: false, error: "User not found" };
-    user.bankAccount = bankData;
-    return { success: true };
-  }
-
-  getFranchiseA(userId) {
-    const user = this.allNodes.get(userId);
-    if (!user) return null;
-    const getGrandchildren = (node) => {
-      if (!node) return [];
-      const grandchildren = [];
-      if (node.left) {
-        grandchildren.push({ 
-          id: node.left.id, 
-          name: node.left.name, 
-          joinDate: node.left.joinDate, 
-          kycVerified: node.left.kycVerified,
-          purchaseValue: node.left.totalSales
-        });
-        grandchildren.push(...getGrandchildren(node.left));
-      }
-      if (node.right) {
-        grandchildren.push({ 
-          id: node.right.id, 
-          name: node.right.name, 
-          joinDate: node.right.joinDate, 
-          kycVerified: node.right.kycVerified,
-          purchaseValue: node.right.totalSales
-        });
-        grandchildren.push(...getGrandchildren(node.right));
-      }
-      return grandchildren;
-    };
-    return {
-      direct: user.left ? { 
-        id: user.left.id, 
-        name: user.left.name, 
-        joinDate: user.left.joinDate, 
-        kycVerified: user.left.kycVerified,
-        purchaseValue: user.left.totalSales
-      } : null,
-      grandchildren: getGrandchildren(user.left)
-    };
-  }
-
-  getFranchiseB(userId) {
-    const user = this.allNodes.get(userId);
-    if (!user) return null;
-    const getGrandchildren = (node) => {
-      if (!node) return [];
-      const grandchildren = [];
-      if (node.left) {
-        grandchildren.push({ 
-          id: node.left.id, 
-          name: node.left.name, 
-          joinDate: node.left.joinDate, 
-          kycVerified: node.left.kycVerified,
-          purchaseValue: node.left.totalSales
-        });
-        grandchildren.push(...getGrandchildren(node.left));
-      }
-      if (node.right) {
-        grandchildren.push({ 
-          id: node.right.id, 
-          name: node.right.name, 
-          joinDate: node.right.joinDate, 
-          kycVerified: node.right.kycVerified,
-          purchaseValue: node.right.totalSales
-        });
-        grandchildren.push(...getGrandchildren(node.right));
-      }
-      return grandchildren;
-    };
-    return {
-      direct: user.right ? { 
-        id: user.right.id, 
-        name: user.right.name, 
-        joinDate: user.right.joinDate, 
-        kycVerified: user.right.kycVerified,
-        purchaseValue: user.right.totalSales
-      } : null,
-      grandchildren: getGrandchildren(user.right)
-    };
-  }
-
-  getHierarchy(userId) {
-    const user = this.allNodes.get(userId);
-    if (!user) return null;
-    let parent = null;
-    if (user.directParentId) {
-      const parentNode = this.allNodes.get(user.directParentId);
-      if (parentNode) parent = { id: parentNode.id, name: parentNode.name, level: parentNode.level, kycVerified: parentNode.kycVerified };
-    }
-    const children = [];
-    if (user.left) children.push({ id: user.left.id, name: user.left.name, level: user.left.level, kycVerified: user.left.kycVerified, position: 'left' });
-    if (user.right) children.push({ id: user.right.id, name: user.right.name, level: user.right.level, kycVerified: user.right.kycVerified, position: 'right' });
-    return { parent, user: { id: user.id, name: user.name, level: user.level, kycVerified: user.kycVerified }, children };
-  }
-
-  getFinancialData(userId) {
-    const user = this.allNodes.get(userId);
-    if (!user) return null;
-    let franchiseAPurchaseValue = 0;
-    let franchiseBPurchaseValue = 0;
-    if (user.left) franchiseAPurchaseValue = this.calculateSubtreeSales(user.left);
-    if (user.right) franchiseBPurchaseValue = this.calculateSubtreeSales(user.right);
-    return {
-      directIncome: user.directIncome,
-      indirectIncome: user.indirectIncome,
-      incomeWallet: user.directIncome + user.indirectIncome,
-      eWallet: user.eWallet || 0,
-      creditWallet: user.creditWallet,
-      franchiseAPurchaseValue: franchiseAPurchaseValue,
-      franchiseBPurchaseValue: franchiseBPurchaseValue,
-      franchiseATurnover: user.franchiseATurnover,
-      franchiseBTurnover: user.franchiseBTurnover,
-      totalPayout: user.directIncome + user.indirectIncome
-    };
-  }
-
-  // Method to get credit history
-  getCreditHistory(userId) {
-    const user = this.allNodes.get(userId);
-    if (!user) return [];
-    return user.creditHistory || [];
-  }
-
-  // Method to update credit wallet balance (for external updates)
-  updateCreditWalletBalance(userId, newBalance) {
-    const user = this.allNodes.get(userId);
-    if (!user) return { success: false, error: "User not found" };
-    
-    const previousBalance = user.creditWallet;
-    user.creditWallet = newBalance;
-    
-    return { 
-      success: true, 
-      previousBalance: previousBalance,
-      currentBalance: newBalance
-    };
-  }
-
-  // Method to update e-wallet balance (for external updates)
-  updateEWalletBalance(userId, newBalance) {
-    const user = this.allNodes.get(userId);
-    if (!user) return { success: false, error: "User not found" };
-    
-    const previousBalance = user.eWallet || 0;
-    user.eWallet = newBalance;
-    
-    return { 
-      success: true, 
-      previousBalance: previousBalance,
-      currentBalance: newBalance
-    };
-  }
-
-  // Method to update income wallet balance (for external updates)
-  updateIncomeWalletBalance(userId, newBalance) {
-    const user = this.allNodes.get(userId);
-    if (!user) return { success: false, error: "User not found" };
-    
-    const previousBalance = user.incomeWallet || 0;
-    user.incomeWallet = newBalance;
-    
-    return { 
-      success: true, 
-      previousBalance: previousBalance,
-      currentBalance: newBalance
-    };
-  }
-
-  // Product management methods for brand owners
-  addProduct(userId, product) {
-    const user = this.allNodes.get(userId);
-    if (!user || user.userType !== 'brand_owner') return { success: false, error: "User not found or not a brand owner" };
-    if (!user.products) user.products = [];
-    user.products.push(product);
-    return { success: true };
-  }
-
-  updateProduct(userId, product) {
-    const user = this.allNodes.get(userId);
-    if (!user || user.userType !== 'brand_owner') return { success: false, error: "User not found or not a brand owner" };
-    if (!user.products) user.products = [];
-    
-    const index = user.products.findIndex(p => p.id === product.id);
-    if (index === -1) return { success: false, error: "Product not found" };
-    
-    user.products[index] = product;
-    return { success: true };
-  }
-
-  deleteProduct(userId, productId) {
-    const user = this.allNodes.get(userId);
-    if (!user || user.userType !== 'brand_owner') return { success: false, error: "User not found or not a brand owner" };
-    if (!user.products) user.products = [];
-    user.products = user.products.filter(p => p.id !== productId);
-    return { success: true };
-  }
-
-  getProducts(userId) {
-    const user = this.allNodes.get(userId);
-    if (!user || user.userType !== 'brand_owner') return [];
-    return user.products || [];
-  }
+constructor() {
+this.allNodes = new Map();
+this.usersByEmail = new Map();
+this.root = null;
+this.initializeFounders();
+}
+
+initializeFounders() {
+// Level 0 - Root Founder
+const founder0 = new TreeNode("FOUND001", "Founder Alpha", "founder1@engineers.com", "founder", 0);
+
+// Level 1 - Two Founders
+const founder1 = new TreeNode("FOUND002", "Founder Beta", "founder2@engineers.com", "founder", 1);
+const founder2 = new TreeNode("FOUND003", "Founder Gamma", "founder3@engineers.com", "founder", 1);
+
+// Set up tree structure
+founder0.left = founder1;
+founder0.right = founder2;
+founder1.parent = founder0;
+founder2.parent = founder0;
+
+// Set direct parent relationships
+founder1.directParentId = "FOUND001";
+founder2.directParentId = "FOUND001";
+founder0.directReferrals = ["FOUND002", "FOUND003"];
+
+this.root = founder0;
+
+// Add to maps
+this.allNodes.set("FOUND001", founder0);
+this.allNodes.set("FOUND002", founder1);
+this.allNodes.set("FOUND003", founder2);
+
+this.usersByEmail.set("founder1@engineers.com", founder0);
+this.usersByEmail.set("founder2@engineers.com", founder1);
+this.usersByEmail.set("founder3@engineers.com", founder2);
+}
+
+// Find next available position in a subtree using BFS
+findNextPositionInSubtree(subtreeRoot) {
+const queue = [subtreeRoot];
+
+while (queue.length > 0) {
+const current = queue.shift();
+
+if (!current.left) {
+return { node: current, position: 'left' };
+}
+if (!current.right) {
+return { node: current, position: 'right' };
+}
+
+if (current.left) queue.push(current.left);
+if (current.right) queue.push(current.right);
+}
+
+return null;
+}
+
+// Find next available position for CUSTOMER using BFS (entire tree)
+getNextCustomerParentInfo() {
+const queue = [this.root];
+
+while (queue.length > 0) {
+const current = queue.shift();
+
+if (!current.left) {
+return { parentId: current.id, parentName: current.name, position: 'left' };
+}
+if (!current.right) {
+return { parentId: current.id, parentName: current.name, position: 'right' };
+}
+
+if (current.left) queue.push(current.left);
+if (current.right) queue.push(current.right);
+}
+
+return null;
+}
+
+// Find next available position for BRAND OWNER (only under founders and brand owners)
+getNextBrandOwnerParentInfo() {
+const queue = [this.root];
+
+while (queue.length > 0) {
+const current = queue.shift();
+
+// Only place brand owners under founders or other brand owners
+if (current.userType === 'founder' || current.userType === 'brand_owner') {
+if (!current.left) {
+return {
+parentId: current.id,
+parentName: current.name,
+position: 'left',
+replacingCustomer: null
+};
+}
+
+if (current.left && current.left.userType === 'customer') {
+return {
+parentId: current.id,
+parentName: current.name,
+position: 'left',
+replacingCustomer: current.left
+};
+}
+
+if (!current.right) {
+return {
+parentId: current.id,
+parentName: current.name,
+position: 'right',
+replacingCustomer: null
+};
+}
+
+if (current.right && current.right.userType === 'customer') {
+return {
+parentId: current.id,
+parentName: current.name,
+position: 'right',
+replacingCustomer: current.right
+};
+}
+}
+
+if (current.left) queue.push(current.left);
+if (current.right) queue.push(current.right);
+}
+
+return null;
+}
+
+generateNextUserId(userType) {
+let prefix = 'CUST';
+if (userType === 'brand_owner') prefix = 'BRAND';
+if (userType === 'founder') prefix = 'FOUND';
+
+const userIds = Array.from(this.allNodes.keys())
+.filter(id => id.startsWith(prefix))
+.map(id => {
+const numPart = id.replace(prefix, '');
+return parseInt(numPart) || 0;
+})
+.sort((a, b) => b - a);
+
+const nextNumber = userIds.length > 0 ? userIds[0] + 1 : 1;
+return `${prefix}${String(nextNumber).padStart(3, '0')}`;
+}
+
+registerCustomer(name, email, password, contact, dateOfBirth, manualParentId = null) {
+let directParent = null;
+let placementParent = null;
+let position = null;
+
+if (manualParentId) {
+directParent = this.allNodes.get(manualParentId);
+if (!directParent) {
+return { success: false, error: "Invalid parent ID" };
+}
+
+// Always use BFS to find the next available position in the parent's subtree
+const positionInfo = this.findNextPositionInSubtree(directParent);
+
+if (!positionInfo) {
+return { success: false, error: "No available position in parent's subtree" };
+}
+
+placementParent = positionInfo.node;
+position = positionInfo.position;
+} else {
+// Global BFS for customers without referrals
+const parentInfo = this.getNextCustomerParentInfo();
+
+if (!parentInfo) {
+return { success: false, error: "No available position in tree" };
+}
+
+placementParent = this.allNodes.get(parentInfo.parentId);
+directParent = placementParent;
+position = parentInfo.position;
+
+if (!placementParent) {
+return { success: false, error: "Parent node not found" };
+}
+}
+
+const newUserId = this.generateNextUserId('customer');
+const newUser = new TreeNode(newUserId, name, email, 'customer', placementParent.level + 1);
+newUser.directParentId = directParent.id;
+newUser.mobile = contact;
+
+// Place in tree structure
+if (position === 'left') {
+placementParent.left = newUser;
+} else {
+placementParent.right = newUser;
+}
+newUser.parent = placementParent;
+
+// Give direct income to the DIRECT parent (who referred them)
+const purchaseAmount = 1000;
+const directIncome = purchaseAmount * 0.05;
+directParent.directIncome += directIncome;
+directParent.totalSales += purchaseAmount;
+directParent.directReferrals.push(newUserId);
+
+// Update franchise turnover for the direct parent
+if (position === 'left') {
+directParent.franchiseATurnover += purchaseAmount;
+} else {
+directParent.franchiseBTurnover += purchaseAmount;
+}
+
+this.allNodes.set(newUserId, newUser);
+this.usersByEmail.set(email, newUser);
+
+return {
+success: true,
+userId: newUserId,
+directParentId: directParent.id,
+directParentName: directParent.name,
+placementParentId: placementParent.id,
+placementParentName: placementParent.name,
+level: newUser.level,
+position: position,
+isThirdPlusChild: directParent.id !== placementParent.id
+};
+}
+
+registerBrandOwner(name, email, password, contact, brandName, businessRegNo, gstNo) {
+const parentInfo = this.getNextBrandOwnerParentInfo();
+
+if (!parentInfo) {
+return { success: false, error: "No available position for brand owner" };
+}
+
+const parent = this.allNodes.get(parentInfo.parentId);
+if (!parent) {
+return { success: false, error: "Parent node not found" };
+}
+
+const newUserId = this.generateNextUserId('brand_owner');
+const newUser = new TreeNode(newUserId, name, email, 'brand_owner', parent.level + 1);
+newUser.brandName = brandName;
+newUser.directParentId = parent.id;
+newUser.mobile = contact;
+
+const replacedCustomer = parentInfo.replacingCustomer;
+let movedCustomerInfo = null;
+
+if (parentInfo.position === 'left') {
+parent.left = newUser;
+} else {
+parent.right = newUser;
+}
+newUser.parent = parent;
+
+if (replacedCustomer) {
+// Remove customer from parent's direct referrals
+const index = parent.directReferrals.indexOf(replacedCustomer.id);
+if (index > -1) {
+parent.directReferrals.splice(index, 1);
+}
+
+// Place customer as left child of the new brand owner
+newUser.left = replacedCustomer;
+replacedCustomer.parent = newUser;
+replacedCustomer.level = newUser.level + 1;
+
+// Set logical parent to maintain income flow
+replacedCustomer.logicalParentId = parent.id;
+
+// Add customer to brand owner's direct referrals
+newUser.directReferrals.push(replacedCustomer.id);
+replacedCustomer.directParentId = newUser.id;
+
+movedCustomerInfo = {
+customerId: replacedCustomer.id,
+customerName: replacedCustomer.name,
+newPosition: 'left',
+logicalParentId: parent.id,
+logicalParentName: parent.name
+};
+}
+
+const purchaseAmount = 5000;
+const directIncome = purchaseAmount * 0.05;
+parent.directIncome += directIncome;
+parent.totalSales += purchaseAmount;
+parent.directReferrals.push(newUserId);
+
+// Update franchise turnover for the parent
+if (parentInfo.position === 'left') {
+parent.franchiseATurnover += purchaseAmount;
+} else {
+parent.franchiseBTurnover += purchaseAmount;
+}
+
+this.allNodes.set(newUserId, newUser);
+this.usersByEmail.set(email, newUser);
+
+return {
+success: true,
+userId: newUserId,
+brandName: brandName,
+parentId: parent.id,
+parentName: parent.name,
+level: newUser.level,
+position: parentInfo.position,
+replacedCustomer: movedCustomerInfo
+};
+}
+
+/**
+* A robust method to swap two nodes in the binary tree.
+* This correctly handles all cases, including swapping a parent with its child,
+* and ensures no nodes are lost from the tree structure.
+* @param {TreeNode} nodeA - The first node to swap.
+* @param {TreeNode} nodeB - The second node to swap.
+*/
+swapNodes(nodeA, nodeB) {
+if (nodeA === nodeB) return;
+
+const parentA = nodeA.parent;
+const parentB = nodeB.parent;
+
+const posA = parentA ? (parentA.left === nodeA ? 'left' : 'right') : null;
+const posB = parentB ? (parentB.left === nodeB ? 'left' : 'right') : null;
+
+// Store original children
+const leftA = nodeA.left;
+const rightA = nodeA.right;
+const leftB = nodeB.left;
+const rightB = nodeB.right;
+
+// 1. Detach nodes from their old parents
+if (parentA) parentA[posA] = null;
+if (parentB) parentB[posB] = null;
+
+// 2. Re-attach nodes to their new parents
+if (parentA) parentA[posA] = nodeB;
+if (parentB) parentB[posB] = nodeA;
+
+// 3. Swap children pointers, ensuring a node doesn't become its own child
+nodeA.left = (leftB === nodeA) ? nodeB : leftB;
+nodeA.right = (rightB === nodeA) ? nodeB : rightB;
+nodeB.left = (leftA === nodeB) ? nodeA : leftA;
+nodeB.right = (rightA === nodeB) ? nodeA : rightA;
+
+// 4. Update parent pointers of all children
+if (nodeA.left) nodeA.left.parent = nodeA;
+if (nodeA.right) nodeA.right.parent = nodeA;
+if (nodeB.left) nodeB.left.parent = nodeB;
+if (nodeB.right) nodeB.right.parent = nodeB;
+
+// 5. Swap parent pointers
+nodeA.parent = parentB;
+nodeB.parent = parentA;
+
+// 6. Swap levels
+const levelA = nodeA.level;
+nodeA.level = nodeB.level;
+nodeB.level = levelA;
+
+// 7. Update root if necessary
+if (this.root === nodeA) {
+this.root = nodeB;
+} else if (this.root === nodeB) {
+this.root = nodeA;
+}
+
+// 8. Update levels for all nodes in the swapped subtrees
+const updateSubtreeLevels = (node) => {
+if (!node) return;
+const queue = [node];
+while (queue.length > 0) {
+const current = queue.shift();
+if (current.left) {
+current.left.level = current.level + 1;
+queue.push(current.left);
+}
+if (current.right) {
+current.right.level = current.level + 1;
+queue.push(current.right);
+}
+}
+};
+updateSubtreeLevels(nodeA);
+updateSubtreeLevels(nodeB);
+}
+
+/**
+* Restructures the tree based on income, but only for customers.
+* @returns {Array} An array of objects detailing the swaps that occurred.
+*/
+restructureTreeBasedOnIncome() {
+const performedSwaps = [];
+const maxIterations = this.allNodes.size * 2; // Safeguard
+let iterations = 0;
+let swapHappened = true;
+
+while (swapHappened && iterations < maxIterations) {
+iterations++;
+swapHappened = false;
+const nodesByLevel = Array.from(this.allNodes.values()).sort((a, b) => b.level - a.level);
+
+for (const node of nodesByLevel) {
+// Only consider swaps if both the node and its parent are 'customers'
+if (node === this.root || !node.parent || node.userType !== 'customer' || node.parent.userType !== 'customer') {
+continue;
+}
+
+const totalIncome = node.directIncome + node.indirectIncome;
+const parentTotalIncome = node.parent.directIncome + node.parent.indirectIncome;
+
+if (totalIncome > parentTotalIncome) {
+performedSwaps.push({
+childId: node.id,
+childName: node.name,
+childIncome: totalIncome,
+parentId: node.parent.id,
+parentName: node.parent.name,
+parentIncome: parentTotalIncome
+});
+
+this.swapNodes(node, node.parent);
+swapHappened = true;
+break; // Restart the check from the bottom
+}
+}
+}
+
+if (iterations >= maxIterations) {
+console.error("Tree restructuring stopped due to exceeding maximum iterations. A logical error may exist.");
+}
+
+return performedSwaps;
+}
+
+// Calculate Reward Credits based on turnover
+calculateRewardCredits(turnover) {
+let credits = 0;
+let remainingTurnover = turnover;
+
+// First slab: ₹0 to ₹200,000 = 10 credits
+if (remainingTurnover > 0) {
+const firstSlab = Math.min(remainingTurnover, 200000);
+if (firstSlab >= 200000) {
+credits += 10;
+remainingTurnover -= 200000;
+} else {
+return 0; // Not enough for first slab
+}
+}
+
+// Second slab: ₹200,001 to ₹700,000 = 15 credits
+if (remainingTurnover > 0) {
+const secondSlab = Math.min(remainingTurnover, 500000);
+if (secondSlab >= 500000) {
+credits += 15;
+remainingTurnover -= 500000;
+} else {
+return credits; // Return credits earned so far
+}
+}
+
+// Third slab: ₹700,001 to ₹1,700,000 = 20 credits
+if (remainingTurnover > 0) {
+const thirdSlab = Math.min(remainingTurnover, 1000000);
+if (thirdSlab >= 1000000) {
+credits += 20;
+remainingTurnover -= 1000000;
+} else {
+return credits; // Return credits earned so far
+}
+}
+
+// Fourth slab: Every additional ₹2,000,000 = 25 credits
+if (remainingTurnover > 0) {
+const fourthSlabCredits = Math.floor(remainingTurnover / 2000000) * 25;
+credits += fourthSlabCredits;
+}
+
+return credits;
+}
+
+// Calculate franchise turnover (only from direct children)
+calculateFranchiseTurnover(userId, franchise) {
+const user = this.allNodes.get(userId);
+if (!user) return 0;
+
+if (franchise === 'A') {
+return user.franchiseATurnover;
+} else if (franchise === 'B') {
+return user.franchiseBTurnover;
+}
+
+return 0;
+}
+
+// Update credit wallet with new credits
+updateCreditWallet(userId, credits, franchise, turnover) {
+const user = this.allNodes.get(userId);
+if (!user) return { success: false, error: "User not found" };
+
+const previousCredits = user.creditWallet;
+user.creditWallet += credits;
+
+// Add to credit history
+const creditEntry = {
+date: new Date().toLocaleDateString(),
+franchise: franchise,
+turnover: turnover,
+creditsEarned: credits,
+totalCredits: user.creditWallet
+};
+
+user.creditHistory.push(creditEntry);
+
+return {
+success: true,
+previousCredits: previousCredits,
+currentCredits: user.creditWallet,
+creditsAdded: credits
+};
+}
+
+monthlyConsolidation() {
+const allUsers = Array.from(this.allNodes.values());
+const creditAllocations = [];
+
+// Step 1: Calculate all indirect incomes based on balanced volume.
+allUsers.forEach(user => {
+user.leftSubtreeSales = this.calculateSubtreeSales(user.left);
+user.rightSubtreeSales = this.calculateSubtreeSales(user.right);
+
+user.leftSubtreeSales += user.carryForwardLeft;
+user.rightSubtreeSales += user.carryForwardRight;
+
+const balancedVolume = Math.min(user.leftSubtreeSales, user.rightSubtreeSales);
+
+// IMPORTANT FIX: Brand owners earn ONLY direct income, not indirect income
+if (balancedVolume > 0 && user.userType !== 'brand_owner') {
+user.indirectIncome += balancedVolume * 0.05;
+}
+
+user.carryForwardLeft = user.leftSubtreeSales - balancedVolume;
+user.carryForwardRight = user.rightSubtreeSales - balancedVolume;
+});
+
+// Step 2: Calculate and allocate reward credits based on franchise turnover
+allUsers.forEach(user => {
+if (user.userType === 'customer') {
+// Calculate credits for Franchise A (left side)
+const creditsFromA = this.calculateRewardCredits(user.franchiseATurnover);
+if (creditsFromA > 0) {
+const creditResult = this.updateCreditWallet(user.id, creditsFromA, 'A', user.franchiseATurnover);
+if (creditResult.success) {
+creditAllocations.push({
+userId: user.id,
+userName: user.name,
+franchise: 'A',
+turnover: user.franchiseATurnover,
+creditsAllocated: creditsFromA,
+totalCredits: user.creditWallet
+});
+}
+}
+
+// Calculate credits for Franchise B (right side)
+const creditsFromB = this.calculateRewardCredits(user.franchiseBTurnover);
+if (creditsFromB > 0) {
+const creditResult = this.updateCreditWallet(user.id, creditsFromB, 'B', user.franchiseBTurnover);
+if (creditResult.success) {
+creditAllocations.push({
+userId: user.id,
+userName: user.name,
+franchise: 'B',
+turnover: user.franchiseBTurnover,
+creditsAllocated: creditsFromB,
+totalCredits: user.creditWallet
+});
+}
+}
+}
+});
+
+// Step 3: Perform tree restructuring based on new total incomes.
+const performedSwaps = this.restructureTreeBasedOnIncome();
+
+return {
+message: "Monthly consolidation completed",
+totalUsers: allUsers.length,
+swapsPerformed: performedSwaps.length,
+swapDetails: performedSwaps,
+creditAllocations: creditAllocations
+};
+}
+
+calculateSubtreeSales(node) {
+if (!node) return 0;
+return node.totalSales +
+this.calculateSubtreeSales(node.left) +
+this.calculateSubtreeSales(node.right);
+}
+
+getTreeVisualization() {
+const result = [];
+const queue = [{ node: this.root, level: 0 }];
+
+while (queue.length > 0) {
+const { node, level } = queue.shift();
+
+if (!result[level]) result[level] = [];
+
+const directParentNode = node.directParentId ? this.allNodes.get(node.directParentId) : null;
+const logicalParentNode = node.logicalParentId ? this.allNodes.get(node.logicalParentId) : null;
+
+result[level].push({
+id: node.id,
+name: node.name,
+email: node.email,
+userType: node.userType,
+brandName: node.brandName || '',
+hasLeft: !!node.left,
+hasRight: !!node.right,
+leftChildId: node.left ? node.left.id : null,
+rightChildId: node.right ? node.right.id : null,
+directReferralsCount: node.directReferrals.length,
+directReferralIds: node.directReferrals,
+directParentId: node.directParentId,
+directParentName: directParentNode ? directParentNode.name : '',
+logicalParentId: node.logicalParentId,
+logicalParentName: logicalParentNode ? logicalParentNode.name : '',
+directIncome: node.directIncome,
+indirectIncome: node.indirectIncome,
+totalSales: node.totalSales,
+level: node.level,
+creditWallet: node.creditWallet,
+franchiseATurnover: node.franchiseATurnover,
+franchiseBTurnover: node.franchiseBTurnover,
+eWallet: node.eWallet || 0,
+hasMovedPosition: !!node.logicalParentId
+});
+
+if (node.left) queue.push({ node: node.left, level: level + 1 });
+if (node.right) queue.push({ node: node.right, level: level + 1 });
+}
+
+return result;
+}
+
+getUserById(userId) {
+return this.allNodes.get(userId);
+}
+
+// New methods for dashboard functionality
+updateKYC(userId, kycData) {
+const user = this.allNodes.get(userId);
+if (!user) return { success: false, error: "User not found" };
+
+user.kycData = kycData;
+user.kycVerified = true;
+return { success: true };
+}
+
+addBankAccount(userId, bankData) {
+const user = this.allNodes.get(userId);
+if (!user) return { success: false, error: "User not found" };
+user.bankAccount = bankData;
+return { success: true };
+}
+
+getFranchiseA(userId) {
+const user = this.allNodes.get(userId);
+if (!user) return null;
+const getGrandchildren = (node) => {
+if (!node) return [];
+const grandchildren = [];
+if (node.left) {
+grandchildren.push({
+id: node.left.id,
+name: node.left.name,
+joinDate: node.left.joinDate,
+kycVerified: node.left.kycVerified,
+purchaseValue: node.left.totalSales
+});
+grandchildren.push(...getGrandchildren(node.left));
+}
+if (node.right) {
+grandchildren.push({
+id: node.right.id,
+name: node.right.name,
+joinDate: node.right.joinDate,
+kycVerified: node.right.kycVerified,
+purchaseValue: node.right.totalSales
+});
+grandchildren.push(...getGrandchildren(node.right));
+}
+return grandchildren;
+};
+return {
+direct: user.left ? {
+id: user.left.id,
+name: user.left.name,
+joinDate: user.left.joinDate,
+kycVerified: user.left.kycVerified,
+purchaseValue: user.left.totalSales
+} : null,
+grandchildren: getGrandchildren(user.left)
+};
+}
+
+getFranchiseB(userId) {
+const user = this.allNodes.get(userId);
+if (!user) return null;
+const getGrandchildren = (node) => {
+if (!node) return [];
+const grandchildren = [];
+if (node.left) {
+grandchildren.push({
+id: node.left.id,
+name: node.left.name,
+joinDate: node.left.joinDate,
+kycVerified: node.left.kycVerified,
+purchaseValue: node.left.totalSales
+});
+grandchildren.push(...getGrandchildren(node.left));
+}
+if (node.right) {
+grandchildren.push({
+id: node.right.id,
+name: node.right.name,
+joinDate: node.right.joinDate,
+kycVerified: node.right.kycVerified,
+purchaseValue: node.right.totalSales
+});
+grandchildren.push(...getGrandchildren(node.right));
+}
+return grandchildren;
+};
+return {
+direct: user.right ? {
+id: user.right.id,
+name: user.right.name,
+joinDate: user.right.joinDate,
+kycVerified: user.right.kycVerified,
+purchaseValue: user.right.totalSales
+} : null,
+grandchildren: getGrandchildren(user.right)
+};
+}
+
+getHierarchy(userId) {
+const user = this.allNodes.get(userId);
+if (!user) return null;
+let parent = null;
+if (user.directParentId) {
+const parentNode = this.allNodes.get(user.directParentId);
+if (parentNode) parent = { id: parentNode.id, name: parentNode.name, level: parentNode.level, kycVerified: parentNode.kycVerified };
+}
+const children = [];
+if (user.left) children.push({ id: user.left.id, name: user.left.name, level: user.left.level, kycVerified: user.left.kycVerified, position: 'left' });
+if (user.right) children.push({ id: user.right.id, name: user.right.name, level: user.right.level, kycVerified: user.right.kycVerified, position: 'right' });
+return { parent, user: { id: user.id, name: user.name, level: user.level, kycVerified: user.kycVerified }, children };
+}
+
+getFinancialData(userId) {
+const user = this.allNodes.get(userId);
+if (!user) return null;
+let franchiseAPurchaseValue = 0;
+let franchiseBPurchaseValue = 0;
+if (user.left) franchiseAPurchaseValue = this.calculateSubtreeSales(user.left);
+if (user.right) franchiseBPurchaseValue = this.calculateSubtreeSales(user.right);
+return {
+directIncome: user.directIncome,
+indirectIncome: user.indirectIncome,
+incomeWallet: user.directIncome + user.indirectIncome,
+eWallet: user.eWallet || 0,
+creditWallet: user.creditWallet,
+franchiseAPurchaseValue: franchiseAPurchaseValue,
+franchiseBPurchaseValue: franchiseBPurchaseValue,
+franchiseATurnover: user.franchiseATurnover,
+franchiseBTurnover: user.franchiseBTurnover,
+totalPayout: user.directIncome + user.indirectIncome
+};
+}
+
+// Method to get credit history
+getCreditHistory(userId) {
+const user = this.allNodes.get(userId);
+if (!user) return [];
+return user.creditHistory || [];
+}
+
+// Method to update credit wallet balance (for external updates)
+updateCreditWalletBalance(userId, newBalance) {
+const user = this.allNodes.get(userId);
+if (!user) return { success: false, error: "User not found" };
+
+const previousBalance = user.creditWallet;
+user.creditWallet = newBalance;
+
+return {
+success: true,
+previousBalance: previousBalance,
+currentBalance: newBalance
+};
+}
+
+// Method to update e-wallet balance (for external updates)
+updateEWalletBalance(userId, newBalance) {
+const user = this.allNodes.get(userId);
+if (!user) return { success: false, error: "User not found" };
+
+const previousBalance = user.eWallet || 0;
+user.eWallet = newBalance;
+
+return {
+success: true,
+previousBalance: previousBalance,
+currentBalance: newBalance
+};
+}
+
+// Method to update income wallet balance (for external updates)
+updateIncomeWalletBalance(userId, newBalance) {
+const user = this.allNodes.get(userId);
+if (!user) return { success: false, error: "User not found" };
+
+const previousBalance = user.incomeWallet || 0;
+user.incomeWallet = newBalance;
+
+return {
+success: true,
+previousBalance: previousBalance,
+currentBalance: newBalance
+};
+}
+
+// Product management methods for brand owners
+addProduct(userId, product) {
+const user = this.allNodes.get(userId);
+if (!user || user.userType !== 'brand_owner') return { success: false, error: "User not found or not a brand owner" };
+if (!user.products) user.products = [];
+user.products.push(product);
+return { success: true };
+}
+
+updateProduct(userId, product) {
+const user = this.allNodes.get(userId);
+if (!user || user.userType !== 'brand_owner') return { success: false, error: "User not found or not a brand owner" };
+if (!user.products) user.products = [];
+
+const index = user.products.findIndex(p => p.id === product.id);
+if (index === -1) return { success: false, error: "Product not found" };
+
+user.products[index] = product;
+return { success: true };
+}
+
+deleteProduct(userId, productId) {
+const user = this.allNodes.get(userId);
+if (!user || user.userType !== 'brand_owner') return { success: false, error: "User not found or not a brand owner" };
+if (!user.products) user.products = [];
+user.products = user.products.filter(p => p.id !== productId);
+return { success: true };
+}
+
+getProducts(userId) {
+const user = this.allNodes.get(userId);
+if (!user || user.userType !== 'brand_owner') return [];
+return user.products || [];
+}
 }
 
 const treeManager = new MLMTreeManager();
@@ -5435,7 +5435,7 @@ function CustomerDashboard({ user, onLogout }) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Number</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhar Number</label>
                     <input 
                       type="text" 
                       value={kycData.aadhaar}
@@ -5446,7 +5446,7 @@ function CustomerDashboard({ user, onLogout }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card Photo</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhar Card Photo</label>
                     <div className="flex items-center space-x-4">
                       <input 
                         type="file" 
@@ -5905,6 +5905,10 @@ function BrandOwnerDashboard({ user, onLogout }) {
   const [products, setProducts] = useState([]);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showStockModal, setShowStockModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [stockUpdateType, setStockUpdateType] = useState('add');
+  const [variantTab, setVariantTab] = useState('stock');
   const [productForm, setProductForm] = useState({
     name: '',
     brandName: '',
@@ -5950,46 +5954,46 @@ function BrandOwnerDashboard({ user, onLogout }) {
   const [accessories, setAccessories] = useState([]);
   const [editingAccessory, setEditingAccessory] = useState(null);
   const [accessoryForm, setAccessoryForm] = useState({
-  name: '',
-  brandName: '',
-  price: '',
-  discountedPrice: '',
-  offer: '',
-  category: '',
-  subCategory: '',
-  stockQuantity: '',
-  sku: '',
-  hsnCode: '',
-  // Accessory-specific fields
-  accessoryType: '',
-  material: '',
-  color: '',
-  size: '',
-  dimensions: '',
-  weight: '',
-  // Common fields
-  shortDescription: '',
-  fullDescription: '',
-  keyFeatures: '',
-  careInstructions: '',
-  images: [],
-  videoLink: '',
-  instagramLink: '',
-  packageDimensions: '',
-  weight: '',
-  deliveryAvailability: '',
-  codOption: '',
-  sellerAddress: '',
-  returnPolicy: '',
-  gstPercentage: '',
-  manufacturerDetails: '',
-  countryOfOrigin: '',
-  // Additional accessory-specific fields
-  warranty: '',
-  authenticityCertificate: null,
-  specialFeatures: '',
-  credits: ''
-});
+    name: '',
+    brandName: '',
+    price: '',
+    discountedPrice: '',
+    offer: '',
+    category: '',
+    subCategory: '',
+    stockQuantity: '',
+    sku: '',
+    hsnCode: '',
+    // Accessory-specific fields
+    accessoryType: '',
+    material: '',
+    color: '',
+    size: '',
+    dimensions: '',
+    weight: '',
+    // Common fields
+    shortDescription: '',
+    fullDescription: '',
+    keyFeatures: '',
+    careInstructions: '',
+    images: [],
+    videoLink: '',
+    instagramLink: '',
+    packageDimensions: '',
+    weight: '',
+    deliveryAvailability: '',
+    codOption: '',
+    sellerAddress: '',
+    returnPolicy: '',
+    gstPercentage: '',
+    manufacturerDetails: '',
+    countryOfOrigin: '',
+    // Additional accessory-specific fields
+    warranty: '',
+    authenticityCertificate: null,
+    specialFeatures: '',
+    credits: ''
+  });
 
   // E-Wallet related states
   const [showAddMoneyModal, setShowAddMoneyModal] = useState(false);
@@ -6019,6 +6023,12 @@ function BrandOwnerDashboard({ user, onLogout }) {
   const [memberToDelete, setMemberToDelete] = useState(null);
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
   
+  // Add these state variables
+  const [showBulkOperations, setShowBulkOperations] = useState(false);
+  const [lowStockAlerts, setLowStockAlerts] = useState([]);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState(null);
+  
   const companyDropdownRef = React.useRef(null);
   
   // Get user data from tree manager
@@ -6031,6 +6041,45 @@ function BrandOwnerDashboard({ user, onLogout }) {
     const savedMembers = JSON.parse(localStorage.getItem('teamMembers') || '[]');
     setTeamMembers(savedMembers);
   }, []);
+
+  // Add these functions
+  const handleDuplicateProduct = (product) => {
+    const duplicatedProduct = {
+      ...product,
+      id: Date.now().toString(),
+      name: `${product.name} (Copy)`,
+      status: 'draft',
+      stockQuantity: 0,
+      skuCodes: product.skuCodes ? product.skuCodes.map(sku => ({...sku, stock: 0})) : [],
+      lastUpdated: new Date().toISOString(),
+      lastSynced: null
+    };
+    
+    setProducts([...products, duplicatedProduct]);
+    alert('Product duplicated successfully!');
+  };
+
+  const checkLowStockAlerts = () => {
+    const alerts = products
+      .filter(product => (product.stockQuantity || 0) < (product.lowStockThreshold || 10))
+      .map(product => ({
+        id: product.id,
+        name: product.name,
+        currentStock: product.stockQuantity || 0,
+        threshold: product.lowStockThreshold || 10
+      }));
+      
+    setLowStockAlerts(alerts);
+    
+    if (alerts.length > 0) {
+      alert(`${alerts.length} products are running low on stock!`);
+    }
+  };
+
+  // Call this function when the component mounts or when products change
+  useEffect(() => {
+    checkLowStockAlerts();
+  }, [products]);
 
   const handleSaveTeamMember = () => {
     if (newTeamMember.name && newTeamMember.email) {
@@ -6412,79 +6461,79 @@ function BrandOwnerDashboard({ user, onLogout }) {
   };
 
   const handleAccessorySubmit = (e) => {
-  e.preventDefault();
-  
-  if (editingAccessory) {
-    // Update existing accessory
-    const updatedAccessories = accessories.map(a => 
-      a.id === editingAccessory.id 
-        ? { ...accessoryForm, id: editingAccessory.id }
-        : a
-    );
-    setAccessories(updatedAccessories);
+    e.preventDefault();
     
-    // Update in treeManager
-    treeManager.updateAccessory(user.userId, { ...accessoryForm, id: editingAccessory.id });
+    if (editingAccessory) {
+      // Update existing accessory
+      const updatedAccessories = accessories.map(a => 
+        a.id === editingAccessory.id 
+          ? { ...accessoryForm, id: editingAccessory.id }
+          : a
+      );
+      setAccessories(updatedAccessories);
+      
+      // Update in treeManager
+      treeManager.updateAccessory(user.userId, { ...accessoryForm, id: editingAccessory.id });
+      
+      alert('Accessory updated successfully!');
+    } else {
+      // Add new accessory
+      const newAccessory = {
+        ...accessoryForm,
+        id: Date.now().toString()
+      };
+      setAccessories([...accessories, newAccessory]);
+      
+      // Save to treeManager
+      treeManager.addAccessory(user.userId, newAccessory);
+      
+      alert('Accessory added successfully!');
+    }
     
-    alert('Accessory updated successfully!');
-  } else {
-    // Add new accessory
-    const newAccessory = {
-      ...accessoryForm,
-      id: Date.now().toString()
-    };
-    setAccessories([...accessories, newAccessory]);
-    
-    // Save to treeManager
-    treeManager.addAccessory(user.userId, newAccessory);
-    
-    alert('Accessory added successfully!');
-  }
-  
-  // Reset form and go back to products list
-  resetAccessoryForm();
-  setActiveTab('products');
+    // Reset form and go back to products list
+    resetAccessoryForm();
+    setActiveTab('products');
   };
 
   const resetAccessoryForm = () => {
-  setAccessoryForm({
-    name: '',
-    brandName: '',
-    price: '',
-    discountedPrice: '',
-    offer: '',
-    category: '',
-    subCategory: '',
-    stockQuantity: '',
-    sku: '',
-    hsnCode: '',
-    accessoryType: '',
-    material: '',
-    color: '',
-    size: '',
-    dimensions: '',
-    weight: '',
-    shortDescription: '',
-    fullDescription: '',
-    keyFeatures: '',
-    careInstructions: '',
-    images: [],
-    videoLink: '',
-    instagramLink: '',
-    packageDimensions: '',
-    weight: '',
-    deliveryAvailability: '',
-    codOption: '',
-    sellerAddress: '',
-    returnPolicy: '',
-    gstPercentage: '',
-    manufacturerDetails: '',
-    countryOfOrigin: '',
-    warranty: '',
-    authenticityCertificate: null,
-    specialFeatures: ''
-  });
-  setEditingAccessory(null);
+    setAccessoryForm({
+      name: '',
+      brandName: '',
+      price: '',
+      discountedPrice: '',
+      offer: '',
+      category: '',
+      subCategory: '',
+      stockQuantity: '',
+      sku: '',
+      hsnCode: '',
+      accessoryType: '',
+      material: '',
+      color: '',
+      size: '',
+      dimensions: '',
+      weight: '',
+      shortDescription: '',
+      fullDescription: '',
+      keyFeatures: '',
+      careInstructions: '',
+      images: [],
+      videoLink: '',
+      instagramLink: '',
+      packageDimensions: '',
+      weight: '',
+      deliveryAvailability: '',
+      codOption: '',
+      sellerAddress: '',
+      returnPolicy: '',
+      gstPercentage: '',
+      manufacturerDetails: '',
+      countryOfOrigin: '',
+      warranty: '',
+      authenticityCertificate: null,
+      specialFeatures: ''
+    });
+    setEditingAccessory(null);
   };
 
   const handlePortalClick = () => {
@@ -6681,6 +6730,87 @@ function BrandOwnerDashboard({ user, onLogout }) {
         </div>
       </div>
     );
+  };
+
+  // Add this sync function
+  const handleSyncToPlatform = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    
+    try {
+      // Prepare the data to sync
+      const syncData = {
+        products: products,
+        timestamp: new Date().toISOString(),
+        brandId: 'your-brand-id', // Replace with actual brand ID
+        totalProducts: products.length,
+        totalStock: products.reduce((sum, product) => sum + (product.stockQuantity || 0), 0)
+      };
+      
+      // Make API call to sync with platform
+      const response = await fetch('https://your-platform-api.com/inventory/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer your-auth-token' // Replace with actual auth
+        },
+        body: JSON.stringify(syncData)
+      });
+      
+      if (response.ok) {
+        // Update last synced timestamp for each product
+        const updatedProducts = products.map(product => ({
+          ...product,
+          lastSynced: new Date().toISOString()
+        }));
+        setProducts(updatedProducts);
+        
+        setSyncMessage({
+          type: 'success',
+          text: `Successfully synced ${products.length} products to platform inventory`
+        });
+      } else {
+        throw new Error('Sync failed');
+      }
+    } catch (error) {
+      console.error('Sync error:', error);
+      setSyncMessage({
+        type: 'error',
+        text: 'Failed to sync products. Please try again.'
+      });
+    } finally {
+      setSyncing(false);
+      
+      // Clear message after 5 seconds
+      setTimeout(() => {
+        setSyncMessage(null);
+      }, 5000);
+    }
+  };
+
+  const categorySubCategories = {
+    "Men's Clothing": [
+      "T-Shirts", "Casual Shirts", "Formal Shirts", "Sweatshirts", "Sweaters", "Jackets", 
+      "Blazers & Coats", "Suits", "Rain Jackets", "Kurtas & Kurta Sets", "Sherwanis", 
+      "Nehru Jackets", "Dhotis", "Jeans", "Casual Trousers", "Formal Trousers", "Shorts", 
+      "Track Pants & Joggers", "Briefs & Trunks", "Boxers", "Vests", "Sleepwear & Loungewear", "Thermals"
+    ],
+    "Women's Clothing": [
+      "Kurtas & Suits", "Kurtis, Tunics & Tops", "Sarees", "Leggings, Salwars & Churidars", 
+      "Skirts & Palazzos", "Dress Materials", "Lehenga Cholis", "Dupattas & Shawls", "Jackets", 
+      "Dresses", "Tops", "Tshirts", "Jeans", "Trousers & Capris", "Shorts & Skirts", "Co-ords", 
+      "Playsuits", "Jumpsuits", "Shrugs", "Sweaters & Sweatshirts", "Jackets & Coats", "Blazers & Waistcoats"
+    ],
+    "Ethnic Wear": [
+      "Ethnic Jackets", "Ethnic Suit Sets", "Kurtas", "Pyjamas & Churidars", "Sherwani Sets", 
+      "Stoles", "Co-ord Sets", "Dresses & Gowns", "Kurta Suit Sets", "Kurta-Bottom Set", 
+      "Kurtas", "Kurtis & Tunics", "Lehenga Choli Sets", "Salwars & Churidars", "Sarees"
+    ],
+    "Western Wear": [
+      "Jeans", "Shirts", "Shorts & 3/4ths", "Suit Sets", "Track Pants", "Tracksuits", 
+      "Trousers & Pants", "Tshirts", "Dresses", "Jeans & Jeggings", "Tops", "Trousers & Pants", 
+      "Tshirts", "Track Pants", "Shirts", "Leggings"
+    ]
   };
   
   const renderTabContent = () => {
@@ -7173,127 +7303,758 @@ function BrandOwnerDashboard({ user, onLogout }) {
                   <Plus size={20} className="mr-2" />
                   Add Accessory
                 </button>
+                <button
+                  onClick={handleSyncToPlatform}
+                  disabled={syncing}
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {syncing ? (
+                    <>
+                      <RefreshCw size={20} className="mr-2 animate-spin" />
+                      Syncing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={20} className="mr-2" />
+                      Sync to Platform
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowBulkOperations(!showBulkOperations)}
+                  className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  <Package size={20} className="mr-2" />
+                  Bulk Operations
+                </button>
+              </div>
+            </div>
+            
+            {/* Sync Status Message */}
+            {syncMessage && (
+              <div className={`mb-4 p-3 rounded-md ${
+                syncMessage.type === 'success' 
+                  ? 'bg-green-100 text-green-800 border border-green-200' 
+                  : 'bg-red-100 text-red-800 border border-red-200'
+              }`}>
+                <div className="flex items-center">
+                  {syncMessage.type === 'success' ? (
+                    <CheckCircle size={20} className="mr-2" />
+                  ) : (
+                    <AlertCircle size={20} className="mr-2" />
+                  )}
+                  <span className="text-sm">{syncMessage.text}</span>
+                </div>
+              </div>
+            )}
+            
+            {/* Bulk Operations Panel */}
+            {showBulkOperations && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                <h3 className="text-lg font-semibold mb-3">Bulk Operations</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Import/Export</h4>
+                    <div className="flex space-x-2">
+                      <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200">
+                        Export Products
+                      </button>
+                      <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200">
+                        Import Products
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Bulk Updates</h4>
+                    <div className="flex space-x-2">
+                      <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200">
+                        Update Prices
+                      </button>
+                      <button className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200">
+                        Update Stock
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Product Filters and Search */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Categories</option>
+                    <option value="Men's Clothing">Men's Clothing</option>
+                    <option value="Women's Clothing">Women's Clothing</option>
+                    <option value="Accessories">Accessories</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Stock Status</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Stock</option>
+                    <option value="in-stock">In Stock</option>
+                    <option value="low-stock">Low Stock</option>
+                    <option value="out-of-stock">Out of Stock</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-3 flex justify-end">
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                  Apply Filters
+                </button>
               </div>
             </div>
             
             {products.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map(product => (
-                  <div key={product.id} className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    {product.images && product.images.length > 0 ? (
-                      <img 
-                        src={product.images[0]} 
-                        alt={product.name}
-                        className="w-full h-48 object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">No Image</span>
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
-                      {product.brandName && <p className="text-sm text-gray-600 mb-2">{product.brandName}</p>}
-                      <div className="space-y-1 text-sm text-gray-600 mb-4">
-                        <p><span className="font-medium">Price:</span> ${product.price}</p>
-                        {product.discountedPrice && <p><span className="font-medium">Discounted Price:</span> ${product.discountedPrice}</p>}
-                        {product.offer && <p><span className="font-medium">Offer:</span> {product.offer}</p>}
-                        {product.category && <p><span className="font-medium">Category:</span> {product.category}</p>}
-                        {product.subCategory && <p><span className="font-medium">Sub-Category:</span> {product.subCategory}</p>}
-                        {product.stockQuantity !== undefined && <p><span className="font-medium">Stock:</span> {product.stockQuantity}</p>}
-                        {product.sku && <p><span className="font-medium">SKU:</span> {product.sku}</p>}
-                        {product.hsnCode && <p><span className="font-medium">HSN Code:</span> {product.hsnCode}</p>}
-                      </div>
-                      
-                      {/* Product Specifications - Collapsible */}
-                      <details className="mb-3">
-                        <summary className="text-sm font-medium cursor-pointer text-blue-600">Specifications</summary>
-                        <div className="mt-2 space-y-1 text-sm text-gray-600">
-                          {product.fitType && <p><span className="font-medium">Fit:</span> {product.fitType}</p>}
-                          {product.type && <p><span className="font-medium">Type:</span> {product.type}</p>}
-                          {product.colors && <p><span className="font-medium">Colors:</span> {product.colors}</p>}
-                          {product.sizes && <p><span className="font-medium">Sizes:</span> {product.sizes}</p>}
-                          {product.material && <p><span className="font-medium">Material:</span> {product.material}</p>}
-                          {product.pattern && <p><span className="font-medium">Pattern:</span> {product.pattern}</p>}
-                          {product.neckType && <p><span className="font-medium">Neck Type:</span> {product.neckType}</p>}
-                          {product.sleeveType && <p><span className="font-medium">Sleeve Type:</span> {product.sleeveType}</p>}
-                          {product.occasion && <p><span className="font-medium">Occasion:</span> {product.occasion}</p>}
-                          {product.length && <p><span className="font-medium">Length:</span> {product.length}</p>}
-                          {product.closureType && <p><span className="font-medium">Closure Type:</span> {product.closureType}</p>}
-                          {product.stretchability && <p><span className="font-medium">Stretchability:</span> {product.stretchability}</p>}
-                        </div>
-                      </details>
-                      
-                      {/* Description - Collapsible */}
-                      {product.shortDescription && (
-                        <details className="mb-3">
-                          <summary className="text-sm font-medium cursor-pointer text-blue-600">Description</summary>
-                          <div className="mt-2 text-sm text-gray-600">
-                            {product.shortDescription && <p>{product.shortDescription}</p>}
-                            {product.fullDescription && <p className="mt-2">{product.fullDescription}</p>}
-                            {product.keyFeatures && (
-                              <div className="mt-2">
-                                <p className="font-medium">Key Features:</p>
-                                <p>{product.keyFeatures}</p>
-                              </div>
-                            )}
-                          </div>
-                        </details>
-                      )}
-                      
-                      {/* Care Instructions - Collapsible */}
-                      {(product.washMethod || product.ironingDetails) && (
-                        <details className="mb-3">
-                          <summary className="text-sm font-medium cursor-pointer text-blue-600">Care Instructions</summary>
-                          <div className="mt-2 space-y-1 text-sm text-gray-600">
-                            {product.washMethod && <p><span className="font-medium">Wash Method:</span> {product.washMethod}</p>}
-                            {product.ironingDetails && <p><span className="font-medium">Ironing Details:</span> {product.ironingDetails}</p>}
-                          </div>
-                        </details>
-                      )}
-                      
-                      {/* Logistics - Collapsible */}
-                      <details className="mb-3">
-                        <summary className="text-sm font-medium cursor-pointer text-blue-600">Logistics</summary>
-                        <div className="mt-2 space-y-1 text-sm text-gray-600">
-                          {product.packageDimensions && <p><span className="font-medium">Package Dimensions:</span> {product.packageDimensions}</p>}
-                          {product.weight && <p><span className="font-medium">Weight:</span> {product.weight}</p>}
-                          {product.deliveryAvailability && <p><span className="font-medium">Delivery:</span> {product.deliveryAvailability}</p>}
-                          {product.codOption && <p><span className="font-medium">COD Option:</span> {product.codOption}</p>}
-                          {product.returnPolicy && <p><span className="font-medium">Return Policy:</span> {product.returnPolicy}</p>}
-                        </div>
-                      </details>
-                      
-                      {/* Compliance - Collapsible */}
-                      <details className="mb-3">
-                        <summary className="text-sm font-medium cursor-pointer text-blue-600">Compliance</summary>
-                        <div className="mt-2 space-y-1 text-sm text-gray-600">
-                          {product.gstPercentage && <p><span className="font-medium">GST:</span> {product.gstPercentage}%</p>}
-                          {product.manufacturerDetails && <p><span className="font-medium">Manufacturer:</span> {product.manufacturerDetails}</p>}
-                          {product.countryOfOrigin && <p><span className="font-medium">Country of Origin:</span> {product.countryOfOrigin}</p>}
-                        </div>
-                      </details>
-                      
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditProduct(product)}
-                          className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                        >
-                          <Edit size={16} className="mr-1" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="flex-1 flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                        >
-                          <Trash2 size={16} className="mr-1" />
-                          Delete
-                        </button>
+              <>
+                {/* Product Statistics */}
+                <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center">
+                      <Package className="text-blue-600 mr-2" size={20} />
+                      <div>
+                        <p className="text-sm text-gray-600">Total Products</p>
+                        <p className="text-xl font-semibold">{products.length}</p>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center">
+                      <CheckCircle className="text-green-600 mr-2" size={20} />
+                      <div>
+                        <p className="text-sm text-gray-600">In Stock</p>
+                        <p className="text-xl font-semibold">{products.filter(p => (p.stockQuantity || 0) > 0).length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                    <div className="flex items-center">
+                      <AlertTriangle className="text-yellow-600 mr-2" size={20} />
+                      <div>
+                        <p className="text-sm text-gray-600">Low Stock</p>
+                        <p className="text-xl font-semibold">{products.filter(p => (p.stockQuantity || 0) > 0 && (p.stockQuantity || 0) < 10).length}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div className="flex items-center">
+                      <XCircle className="text-red-600 mr-2" size={20} />
+                      <div>
+                        <p className="text-sm text-gray-600">Out of Stock</p>
+                        <p className="text-xl font-semibold">{products.filter(p => (p.stockQuantity || 0) === 0).length}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map(product => (
+                    <div key={product.id} className={`border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow ${product.status === 'draft' ? 'opacity-75' : ''}`}>
+                      {product.images && product.images.length > 0 ? (
+                        <div className="relative">
+                          <img 
+                            src={product.images[0]} 
+                            alt={product.name}
+                            className="w-full h-48 object-cover"
+                          />
+                          {/* Product Status Badges */}
+                          <div className="absolute top-2 left-2 flex flex-col space-y-1">
+                            {product.status === 'draft' && (
+                              <span className="text-xs bg-gray-800 text-white px-2 py-1 rounded">
+                                Draft
+                              </span>
+                            )}
+                            {product.featured && (
+                              <span className="text-xs bg-yellow-500 text-white px-2 py-1 rounded">
+                                Featured
+                              </span>
+                            )}
+                            {product.newProduct && (
+                              <span className="text-xs bg-green-500 text-white px-2 py-1 rounded">
+                                New
+                              </span>
+                            )}
+                            {product.onSale && (
+                              <span className="text-xs bg-red-500 text-white px-2 py-1 rounded">
+                                Sale
+                              </span>
+                            )}
+                            {(product.stockQuantity || 0) === 0 && (
+                              <span className="text-xs bg-red-600 text-white px-2 py-1 rounded">
+                                Out of Stock
+                              </span>
+                            )}
+                            {(product.stockQuantity || 0) > 0 && (product.stockQuantity || 0) < 10 && (
+                              <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">
+                                Low Stock
+                              </span>
+                            )}
+                          </div>
+                          {/* Last Synced Badge */}
+                          {product.lastSynced && (
+                            <span className="absolute top-2 right-2 text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                              Synced
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-400">No Image</span>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-lg font-semibold">{product.name}</h3>
+                          <div className="flex items-center space-x-1">
+                            {/* Rating Display */}
+                            {product.rating && (
+                              <div className="flex items-center">
+                                <Star size={14} className="text-yellow-500 fill-current" />
+                                <span className="text-xs ml-1">{product.rating}</span>
+                              </div>
+                            )}
+                            {/* View Count */}
+                            {product.viewCount && (
+                              <div className="flex items-center text-gray-500">
+                                <Eye size={14} className="mr-1" />
+                                <span className="text-xs">{product.viewCount}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {product.brandName && <p className="text-sm text-gray-600 mb-2">{product.brandName}</p>}
+                        
+                        {/* SEO URL Slug */}
+                        {product.slug && (
+                          <p className="text-xs text-gray-500 mb-2 truncate">
+                            URL: /products/{product.slug}
+                          </p>
+                        )}
+                        
+                        {/* Pricing Information */}
+                        <div className="space-y-1 text-sm text-gray-600 mb-3">
+                          <p><span className="font-medium">MRP:</span> ₹{product.price || product.mrp}</p>
+                          {product.sellingPrice && <p><span className="font-medium">Selling Price:</span> ₹{product.sellingPrice}</p>}
+                          {product.gstInclusivePrice && <p><span className="font-medium">GST Inclusive:</span> ₹{product.gstInclusivePrice}</p>}
+                          {product.offer && <p><span className="font-medium">Offer:</span> {product.offer}</p>}
+                          {product.credits && <p><span className="font-medium">Credits:</span> {product.credits}</p>}
+                        </div>
+                        
+                        {/* Product Classification */}
+                        <div className="space-y-1 text-sm text-gray-600 mb-3">
+                          <p><span className="font-medium">Category:</span> {product.category}</p>
+                          {product.subCategory && <p><span className="font-medium">Sub-Category:</span> {product.subCategory}</p>}
+                          {product.gender && <p><span className="font-medium">Gender:</span> {product.gender}</p>}
+                          {product.occasion && <p><span className="font-medium">Occasion:</span> {product.occasion}</p>}
+                        </div>
+                        
+                        {/* Inventory Information */}
+                        <div className="space-y-1 text-sm text-gray-600 mb-3">
+                          <p><span className="font-medium">Stock:</span> {product.stockQuantity || 0}</p>
+                          {product.sku && <p><span className="font-medium">SKU:</span> {product.sku}</p>}
+                          {product.hsnCode && <p><span className="font-medium">HSN Code:</span> {product.hsnCode}</p>}
+                          {product.gstPercentage && <p><span className="font-medium">GST:</span> {product.gstPercentage}</p>}
+                        </div>
+                        
+                        {/* Product Variants */}
+                        <div className="mb-3 p-2 bg-gray-50 rounded">
+                          <div className="text-xs text-gray-600">
+                            {product.colors && (
+                              <p className="mb-1">
+                                <span className="font-medium">Colors:</span> {product.colors}
+                              </p>
+                            )}
+                            {product.sizes && (
+                              <p className="mb-1">
+                                <span className="font-medium">Sizes:</span> {product.sizes}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Product Status and Actions */}
+                        <div className="mb-3 p-2 bg-gray-50 rounded">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium">Status</span>
+                            <select
+                              value={product.status || 'draft'}
+                              onChange={(e) => {
+                                const updatedProducts = products.map(p => 
+                                  p.id === product.id ? { ...p, status: e.target.value } : p
+                                );
+                                setProducts(updatedProducts);
+                              }}
+                              className="text-xs px-2 py-1 border border-gray-300 rounded"
+                            >
+                              <option value="draft">Draft</option>
+                              <option value="published">Published</option>
+                              <option value="archived">Archived</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center space-x-4 text-xs">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={product.featured || false}
+                                onChange={(e) => {
+                                  const updatedProducts = products.map(p => 
+                                    p.id === product.id ? { ...p, featured: e.target.checked } : p
+                                  );
+                                  setProducts(updatedProducts);
+                                }}
+                                className="mr-1"
+                              />
+                              Featured
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={product.newProduct || false}
+                                onChange={(e) => {
+                                  const updatedProducts = products.map(p => 
+                                    p.id === product.id ? { ...p, newProduct: e.target.checked } : p
+                                  );
+                                  setProducts(updatedProducts);
+                                }}
+                                className="mr-1"
+                              />
+                              New
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={product.onSale || false}
+                                onChange={(e) => {
+                                  const updatedProducts = products.map(p => 
+                                    p.id === product.id ? { ...p, onSale: e.target.checked } : p
+                                  );
+                                  setProducts(updatedProducts);
+                                }}
+                                className="mr-1"
+                              />
+                              On Sale
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {/* Stock Management Section */}
+                        <div className="mb-3 p-2 bg-gray-50 rounded">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-medium">Stock & Variants</span>
+                            <button
+                              onClick={() => {
+                                setSelectedProduct(product);
+                                setShowStockModal(true);
+                                setStockUpdateType('add');
+                                setVariantTab('stock');
+                              }}
+                              className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                            >
+                              <Edit size={12} className="mr-1" />
+                              Manage
+                            </button>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            <p>Total Stock: {product.stockQuantity || 0}</p>
+                            {product.lastUpdated && (
+                              <p>Last Updated: {new Date(product.lastUpdated).toLocaleDateString()}</p>
+                            )}
+                            {product.stockHistory && product.stockHistory.length > 0 && (
+                              <p>History: {product.stockHistory.length} updates</p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* SEO and Marketing */}
+                        <details className="mb-3">
+                          <summary className="text-sm font-medium cursor-pointer text-blue-600">SEO & Marketing</summary>
+                          <div className="mt-2 space-y-1 text-sm text-gray-600">
+                            {product.metaTitle && <p><span className="font-medium">Meta Title:</span> {product.metaTitle}</p>}
+                            {product.metaDescription && <p><span className="font-medium">Meta Description:</span> {product.metaDescription}</p>}
+                            {product.tags && <p><span className="font-medium">Tags:</span> {product.tags}</p>}
+                            {product.socialImage && <p><span className="font-medium">Social Image:</span> Available</p>}
+                          </div>
+                        </details>
+                        
+                        {/* Product Relationships */}
+                        {product.relatedProducts && product.relatedProducts.length > 0 && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Related Products</summary>
+                            <div className="mt-2 text-sm text-gray-600">
+                              <p>Related: {product.relatedProducts.length} products</p>
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Reviews and Ratings */}
+                        {product.reviews && product.reviews.length > 0 && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Reviews</summary>
+                            <div className="mt-2 text-sm text-gray-600">
+                              <p>Total Reviews: {product.reviews.length}</p>
+                              <p>Average Rating: {product.rating}</p>
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Analytics */}
+                        {product.analytics && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Analytics</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              <p>Views: {product.analytics.views || 0}</p>
+                              <p>Add to Cart: {product.analytics.addToCart || 0}</p>
+                              <p>Purchases: {product.analytics.purchases || 0}</p>
+                              <p>Conversion Rate: {product.analytics.conversionRate || 0}%</p>
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Material & Fabric Details */}
+                        {(product.primaryFabric || product.material || product.fabricComposition) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Material Details</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.primaryFabric && <p><span className="font-medium">Primary Fabric:</span> {product.primaryFabric}</p>}
+                              {product.material && <p><span className="font-medium">Material:</span> {product.material}</p>}
+                              {product.secondaryMaterial && <p><span className="font-medium">Secondary Material:</span> {product.secondaryMaterial}</p>}
+                              {product.fabricComposition && <p><span className="font-medium">Fabric Composition:</span> {product.fabricComposition}</p>}
+                              {product.fabricWeight && <p><span className="font-medium">Fabric Weight:</span> {product.fabricWeight}</p>}
+                              {product.fabricTransparency && <p><span className="font-medium">Transparency:</span> {product.fabricTransparency}</p>}
+                              {product.fabricProperties && <p><span className="font-medium">Properties:</span> {product.fabricProperties}</p>}
+                              {product.finish && <p><span className="font-medium">Finish:</span> {product.finish}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* SKU Codes Section */}
+                        {product.skuCodes && product.skuCodes.length > 0 && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">SKU Codes</summary>
+                            <div className="mt-2 overflow-x-auto">
+                              <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                  <tr>
+                                    <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Size
+                                    </th>
+                                    <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Color
+                                    </th>
+                                    <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      SKU
+                                    </th>
+                                    <th scope="col" className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                      Stock
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                  {product.skuCodes.map((sku, index) => (
+                                    <tr key={index}>
+                                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
+                                        {sku.size}
+                                      </td>
+                                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
+                                        {sku.color}
+                                      </td>
+                                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
+                                        {sku.sku}
+                                      </td>
+                                      <td className="px-2 py-1 whitespace-nowrap text-xs text-gray-900">
+                                        {sku.stock || 0}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Product Specifications */}
+                        <details className="mb-3">
+                          <summary className="text-sm font-medium cursor-pointer text-blue-600">Specifications</summary>
+                          <div className="mt-2 space-y-1 text-sm text-gray-600">
+                            {product.fitType && <p><span className="font-medium">Fit:</span> {product.fitType}</p>}
+                            {product.type && <p><span className="font-medium">Type:</span> {product.type}</p>}
+                            {product.pattern && <p><span className="font-medium">Pattern:</span> {product.pattern}</p>}
+                            {product.neckType && <p><span className="font-medium">Neck Type:</span> {product.neckType}</p>}
+                            {product.sleeveType && <p><span className="font-medium">Sleeve Type:</span> {product.sleeveType}</p>}
+                            {product.length && <p><span className="font-medium">Length:</span> {product.length}</p>}
+                            {product.closureType && <p><span className="font-medium">Closure Type:</span> {product.closureType}</p>}
+                            {product.stretchability && <p><span className="font-medium">Stretchability:</span> {product.stretchability}</p>}
+                            {product.adjustability && <p><span className="font-medium">Adjustability:</span> {product.adjustability}</p>}
+                            
+                            {/* Accessory Specific Details */}
+                            {product.bagType && <p><span className="font-medium">Bag Type:</span> {product.bagType}</p>}
+                            {product.compartments && <p><span className="font-medium">Compartments:</span> {product.compartments}</p>}
+                            {product.metalType && <p><span className="font-medium">Metal Type:</span> {product.metalType}</p>}
+                            {product.gemstoneType && <p><span className="font-medium">Gemstone:</span> {product.gemstoneType}</p>}
+                            {product.plating && <p><span className="font-medium">Plating:</span> {product.plating}</p>}
+                            {product.watchType && <p><span className="font-medium">Watch Type:</span> {product.watchType}</p>}
+                            {product.bandMaterial && <p><span className="font-medium">Band Material:</span> {product.bandMaterial}</p>}
+                            {product.waterResistance && <p><span className="font-medium">Water Resistance:</span> {product.waterResistance}</p>}
+                          </div>
+                        </details>
+                        
+                        {/* Dimensions & Weight */}
+                        <details className="mb-3">
+                          <summary className="text-sm font-medium cursor-pointer text-blue-600">Dimensions & Weight</summary>
+                          <div className="mt-2 space-y-1 text-sm text-gray-600">
+                            {product.weight && <p><span className="font-medium">Weight:</span> {product.weight}</p>}
+                            {product.dimensions && <p><span className="font-medium">Dimensions:</span> {product.dimensions}</p>}
+                            {product.packageDimensions && <p><span className="font-medium">Package Dimensions:</span> {product.packageDimensions}</p>}
+                            {product.packageWeight && <p><span className="font-medium">Package Weight:</span> {product.packageWeight}</p>}
+                            {product.packagingType && <p><span className="font-medium">Packaging Type:</span> {product.packagingType}</p>}
+                          </div>
+                        </details>
+                        
+                        {/* Model Information */}
+                        {(product.modelHeight || product.modelWearingSize || product.fitNote) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Model Information</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.modelHeight && <p><span className="font-medium">Model Height:</span> {product.modelHeight}</p>}
+                              {product.modelWearingSize && <p><span className="font-medium">Model Wearing:</span> {product.modelWearingSize}</p>}
+                              {product.fitNote && <p><span className="font-medium">Fit Note:</span> {product.fitNote}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Size Chart */}
+                        {(product.sizeChartImage || product.sizeGuide) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Size Guide</summary>
+                            <div className="mt-2">
+                              {product.sizeChartImage && (
+                                <img 
+                                  src={product.sizeChartImage} 
+                                  alt="Size Chart"
+                                  className="w-32 h-auto object-cover rounded border mb-2"
+                                />
+                              )}
+                              {product.sizeGuide && (
+                                <p className="text-sm text-gray-600">{product.sizeGuide}</p>
+                              )}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Descriptions */}
+                        {(product.shortDescription || product.fullDescription || product.keyFeatures || product.stylingTips) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Descriptions</summary>
+                            <div className="mt-2 text-sm text-gray-600">
+                              {product.shortDescription && <p className="mb-2">{product.shortDescription}</p>}
+                              {product.fullDescription && <p className="mb-2">{product.fullDescription}</p>}
+                              {product.keyFeatures && (
+                                <div className="mb-2">
+                                  <p className="font-medium">Key Features:</p>
+                                  <p>{product.keyFeatures}</p>
+                                </div>
+                              )}
+                              {product.stylingTips && (
+                                <div>
+                                  <p className="font-medium">Styling Tips:</p>
+                                  <p>{product.stylingTips}</p>
+                                </div>
+                              )}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Care Instructions */}
+                        {(product.washMethod || product.washTemperature || product.bleach || product.dryMethod || product.ironingDetails || product.specialCare || product.storage) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Care Instructions</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.washMethod && <p><span className="font-medium">Wash Method:</span> {product.washMethod}</p>}
+                              {product.washTemperature && <p><span className="font-medium">Temperature:</span> {product.washTemperature}</p>}
+                              {product.bleach && <p><span className="font-medium">Bleach:</span> {product.bleach}</p>}
+                              {product.dryMethod && <p><span className="font-medium">Dry Method:</span> {product.dryMethod}</p>}
+                              {product.ironingDetails && <p><span className="font-medium">Ironing:</span> {product.ironingDetails}</p>}
+                              {product.specialCare && <p><span className="font-medium">Special Care:</span> {product.specialCare}</p>}
+                              {product.storage && <p><span className="font-medium">Storage:</span> {product.storage}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Media */}
+                        {(product.videoLink || product.instagramLink) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Media</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.videoLink && (
+                                <p>
+                                  <span className="font-medium">Video:</span>
+                                  <a href={product.videoLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+                                    Watch Video
+                                  </a>
+                                </p>
+                              )}
+                              {product.instagramLink && (
+                                <p>
+                                  <span className="font-medium">Instagram:</span>
+                                  <a href={product.instagramLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline ml-1">
+                                    View on Instagram
+                                  </a>
+                                </p>
+                              )}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Logistics */}
+                        <details className="mb-3">
+                          <summary className="text-sm font-medium cursor-pointer text-blue-600">Logistics</summary>
+                          <div className="mt-2 space-y-1 text-sm text-gray-600">
+                            {product.warehouseLocation && <p><span className="font-medium">Warehouse:</span> {product.warehouseLocation}</p>}
+                            {product.deliveryAvailability && <p><span className="font-medium">Delivery:</span> {product.deliveryAvailability}</p>}
+                            {product.codOption && <p><span className="font-medium">COD:</span> {product.codOption}</p>}
+                            {product.returnPolicy && <p><span className="font-medium">Return Policy:</span> {product.returnPolicy}</p>}
+                            {product.shippingClass && <p><span className="font-medium">Shipping Class:</span> {product.shippingClass}</p>}
+                            {product.freeShipping && <p><span className="font-medium">Free Shipping:</span> {product.freeShipping ? 'Yes' : 'No'}</p>}
+                          </div>
+                        </details>
+                        
+                        {/* Pricing Strategy */}
+                        {(product.tieredPricing || product.volumeDiscount || product.specialPricing) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Pricing Strategy</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.tieredPricing && <p><span className="font-medium">Tiered Pricing:</span> Available</p>}
+                              {product.volumeDiscount && <p><span className="font-medium">Volume Discount:</span> {product.volumeDiscount}</p>}
+                              {product.specialPricing && <p><span className="font-medium">Special Pricing:</span> {product.specialPricing}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Tax Management */}
+                        {(product.taxClass || product.taxExempt || product.regionSpecificTax) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Tax Management</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.taxClass && <p><span className="font-medium">Tax Class:</span> {product.taxClass}</p>}
+                              {product.taxExempt && <p><span className="font-medium">Tax Exempt:</span> {product.taxExempt ? 'Yes' : 'No'}</p>}
+                              {product.regionSpecificTax && <p><span className="font-medium">Region Specific Tax:</span> Available</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Product Customization */}
+                        {(product.customTextFields || product.productOptions || product.personalization) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Customization</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.customTextFields && <p><span className="font-medium">Custom Text:</span> Available</p>}
+                              {product.productOptions && <p><span className="font-medium">Product Options:</span> Available</p>}
+                              {product.personalization && <p><span className="font-medium">Personalization:</span> {product.personalization}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Product Lifecycle */}
+                        {(product.launchDate || product.endOfLife || product.seasonal) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Product Lifecycle</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.launchDate && <p><span className="font-medium">Launch Date:</span> {new Date(product.launchDate).toLocaleDateString()}</p>}
+                              {product.endOfLife && <p><span className="font-medium">End of Life:</span> {new Date(product.endOfLife).toLocaleDateString()}</p>}
+                              {product.seasonal && <p><span className="font-medium">Seasonal:</span> {product.seasonal}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Multi-channel Integration */}
+                        {(product.marketplaceSync || product.channelPricing || product.channelInventory) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Multi-channel</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.marketplaceSync && <p><span className="font-medium">Marketplace Sync:</span> {product.marketplaceSync.join(', ')}</p>}
+                              {product.channelPricing && <p><span className="font-medium">Channel Pricing:</span> Available</p>}
+                              {product.channelInventory && <p><span className="font-medium">Channel Inventory:</span> Available</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        {/* Compliance */}
+                        <details className="mb-3">
+                          <summary className="text-sm font-medium cursor-pointer text-blue-600">Compliance</summary>
+                          <div className="mt-2 space-y-1 text-sm text-gray-600">
+                            {product.countryOfOrigin && <p><span className="font-medium">Country of Origin:</span> {product.countryOfOrigin}</p>}
+                            {product.manufacturerDetails && <p><span className="font-medium">Manufacturer:</span> {product.manufacturerDetails}</p>}
+                            {product.packerDetails && <p><span className="font-medium">Packer:</span> {product.packerDetails}</p>}
+                            {product.sellerAddress && <p><span className="font-medium">Seller Address:</span> {product.sellerAddress}</p>}
+                            {product.certifications && <p><span className="font-medium">Certifications:</span> {product.certifications.join(', ')}</p>}
+                          </div>
+                        </details>
+                        
+                        {/* Additional Information */}
+                        {(product.tags || product.authCertificate || product.warranty) && (
+                          <details className="mb-3">
+                            <summary className="text-sm font-medium cursor-pointer text-blue-600">Additional Info</summary>
+                            <div className="mt-2 space-y-1 text-sm text-gray-600">
+                              {product.tags && <p><span className="font-medium">Tags:</span> {product.tags}</p>}
+                              {product.authCertificate && (
+                                <p>
+                                  <span className="font-medium">Authenticity:</span>
+                                  <span className="text-green-600 ml-1">Certificate Available</span>
+                                </p>
+                              )}
+                              {product.warranty && <p><span className="font-medium">Warranty:</span> {product.warranty}</p>}
+                            </div>
+                          </details>
+                        )}
+                        
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditProduct(product)}
+                            className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          >
+                            <Edit size={16} className="mr-1" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="flex-1 flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                          >
+                            <Trash2 size={16} className="mr-1" />
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => handleDuplicateProduct(product)}
+                            className="flex-1 flex items-center justify-center px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                          >
+                            <Copy size={16} className="mr-1" />
+                            Duplicate
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="p-8 border border-gray-200 rounded-lg bg-gray-50 text-center">
                 <p className="text-gray-500 mb-4">No products added yet</p>
@@ -7319,8 +8080,774 @@ function BrandOwnerDashboard({ user, onLogout }) {
                 </div>
               </div>
             )}
+            
+            {/* Enhanced Stock & Variant Management Modal */}
+            {showStockModal && selectedProduct && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Manage Product</h3>
+                    <button
+                      onClick={() => setShowStockModal(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-4">
+                      Product: <span className="font-medium">{selectedProduct.name}</span>
+                    </p>
+                    
+                    {/* Tab Navigation */}
+                    <div className="flex border-b mb-4">
+                      <button
+                        onClick={() => setVariantTab('stock')}
+                        className={`px-4 py-2 text-sm font-medium ${
+                          variantTab === 'stock'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Stock Management
+                      </button>
+                      <button
+                        onClick={() => setVariantTab('colors')}
+                        className={`px-4 py-2 text-sm font-medium ${
+                          variantTab === 'colors'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Colors
+                      </button>
+                      <button
+                        onClick={() => setVariantTab('sizes')}
+                        className={`px-4 py-2 text-sm font-medium ${
+                          variantTab === 'sizes'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Sizes
+                      </button>
+                      <button
+                        onClick={() => setVariantTab('seo')}
+                        className={`px-4 py-2 text-sm font-medium ${
+                          variantTab === 'seo'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        SEO
+                      </button>
+                      <button
+                        onClick={() => setVariantTab('pricing')}
+                        className={`px-4 py-2 text-sm font-medium ${
+                          variantTab === 'pricing'
+                            ? 'border-b-2 border-blue-500 text-blue-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Pricing
+                      </button>
+                    </div>
+                    
+                    {/* Stock Management Tab */}
+                    {variantTab === 'stock' && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Current Total Stock: <span className="font-medium">{selectedProduct.stockQuantity || 0}</span>
+                        </p>
+                        
+                        {/* Toggle between Add and Set Stock */}
+                        <div className="mb-4">
+                          <div className="flex items-center space-x-4">
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                name="stockUpdateType"
+                                value="add"
+                                checked={stockUpdateType === 'add'}
+                                onChange={() => setStockUpdateType('add')}
+                                className="mr-2"
+                              />
+                              <span className="text-sm">Add to existing stock</span>
+                            </label>
+                            <label className="flex items-center">
+                              <input
+                                type="radio"
+                                name="stockUpdateType"
+                                value="set"
+                                checked={stockUpdateType === 'set'}
+                                onChange={() => setStockUpdateType('set')}
+                                className="mr-2"
+                              />
+                              <span className="text-sm">Set new stock quantity</span>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        {/* Low Stock Alert */}
+                        <div className="mb-4 p-3 bg-yellow-50 rounded-md">
+                          <div className="flex items-center">
+                            <AlertTriangle size={16} className="text-yellow-600 mr-2" />
+                            <div>
+                              <p className="text-sm font-medium text-yellow-800">Low Stock Alert</p>
+                              <p className="text-xs text-yellow-700">
+                                Notify when stock falls below: 
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={selectedProduct.lowStockThreshold || 10}
+                                  onChange={(e) => setSelectedProduct({
+                                    ...selectedProduct,
+                                    lowStockThreshold: parseInt(e.target.value) || 10
+                                  })}
+                                  className="w-16 ml-2 px-2 py-1 border border-yellow-300 rounded text-sm"
+                                />
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {selectedProduct.skuCodes && selectedProduct.skuCodes.length > 0 ? (
+                          <div className="space-y-3">
+                            <p className="text-sm font-medium">
+                              {stockUpdateType === 'add' ? 'Add Stock by SKU:' : 'Set Stock by SKU:'}
+                            </p>
+                            {selectedProduct.skuCodes.map((sku, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <div className="flex-1 text-xs text-gray-600">
+                                  {sku.size} - {sku.color} ({sku.sku})
+                                  <span className="ml-1 text-gray-500">
+                                    (Current: {sku.stock || 0})
+                                  </span>
+                                </div>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  placeholder={stockUpdateType === 'add' ? 'Add' : 'Set'}
+                                  value={stockUpdateType === 'add' ? (sku.addStock || '') : (sku.newStock || '')}
+                                  onChange={(e) => {
+                                    const updatedSkus = [...selectedProduct.skuCodes];
+                                    if (stockUpdateType === 'add') {
+                                      updatedSkus[index].addStock = e.target.value;
+                                    } else {
+                                      updatedSkus[index].newStock = e.target.value;
+                                    }
+                                    setSelectedProduct({
+                                      ...selectedProduct,
+                                      skuCodes: updatedSkus
+                                    });
+                                  }}
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                {stockUpdateType === 'add' && (
+                                  <div className="text-xs text-gray-500 w-16">
+                                    New: {(sku.stock || 0) + (parseInt(sku.addStock) || 0)}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              {stockUpdateType === 'add' ? 'Stock to Add' : 'New Stock Quantity'}
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder={stockUpdateType === 'add' ? 'Enter quantity to add' : 'Enter new total quantity'}
+                              value={stockUpdateType === 'add' ? (selectedProduct.addStock || '') : (selectedProduct.newStock || '')}
+                              onChange={(e) => {
+                                if (stockUpdateType === 'add') {
+                                  setSelectedProduct({
+                                    ...selectedProduct,
+                                    addStock: e.target.value
+                                  });
+                                } else {
+                                  setSelectedProduct({
+                                    ...selectedProduct,
+                                    newStock: e.target.value
+                                  });
+                                }
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            {stockUpdateType === 'add' && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                New total: {(selectedProduct.stockQuantity || 0) + (parseInt(selectedProduct.addStock) || 0)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Stock History Preview */}
+                        <div className="mt-4 p-2 bg-gray-50 rounded">
+                          <p className="text-xs font-medium text-gray-700 mb-1">Update Summary:</p>
+                          <p className="text-xs text-gray-600">
+                            {stockUpdateType === 'add' 
+                              ? `Adding ${selectedProduct.skuCodes 
+                                  ? selectedProduct.skuCodes.reduce((sum, sku) => sum + (parseInt(sku.addStock) || 0), 0)
+                                  : (parseInt(selectedProduct.addStock) || 0)} units to existing stock`
+                              : `Setting new stock quantity to ${selectedProduct.skuCodes
+                                  ? selectedProduct.skuCodes.reduce((sum, sku) => sum + (parseInt(sku.newStock) || 0), 0)
+                                  : (parseInt(selectedProduct.newStock) || 0)} units`
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Colors Tab */}
+                    {variantTab === 'colors' && (
+                      <div>
+                        <div className="mb-4">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Current Colors:</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {(selectedProduct.colors ? selectedProduct.colors.split(', ') : []).map((color, index) => (
+                              <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                                <span className="text-sm">{color}</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const colors = selectedProduct.colors.split(', ');
+                                    colors.splice(index, 1);
+                                    setSelectedProduct({
+                                      ...selectedProduct,
+                                      colors: colors.join(', ')
+                                    });
+                                  }}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Add New Color:</label>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="text" 
+                              value={selectedProduct.newColorInput || ''}
+                              onChange={(e) => setSelectedProduct({...selectedProduct, newColorInput: e.target.value})}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Enter color name"
+                            />
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                if (selectedProduct.newColorInput && selectedProduct.newColorInput.trim()) {
+                                  const colors = selectedProduct.colors ? selectedProduct.colors.split(', ') : [];
+                                  if (!colors.includes(selectedProduct.newColorInput.trim())) {
+                                    const newColors = [...colors, selectedProduct.newColorInput.trim()].join(', ');
+                                    setSelectedProduct({
+                                      ...selectedProduct,
+                                      colors: newColors,
+                                      newColorInput: ''
+                                    });
+                                  }
+                                }
+                              }}
+                              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Generate SKUs for new color */}
+                        {selectedProduct.sizes && selectedProduct.colors && (
+                          <div className="mt-4 p-2 bg-blue-50 rounded">
+                            <p className="text-xs text-blue-700 mb-2">
+                              New SKUs will be generated for the new color with existing sizes
+                            </p>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const sizes = selectedProduct.sizes.split(', ');
+                                const colors = selectedProduct.colors.split(', ');
+                                const brandPrefix = selectedProduct.brandName ? selectedProduct.brandName.substring(0, 3).toUpperCase() : 'BRD';
+                                const categoryPrefix = selectedProduct.category ? selectedProduct.category.substring(0, 3).toUpperCase() : 'CAT';
+                                
+                                const existingSkus = selectedProduct.skuCodes || [];
+                                const existingSkuKeys = new Set(existingSkus.map(sku => `${sku.size}-${sku.color}`));
+                                
+                                const newSkuCodes = [...existingSkus];
+                                
+                                sizes.forEach(size => {
+                                  colors.forEach(color => {
+                                    const skuKey = `${size}-${color}`;
+                                    if (!existingSkuKeys.has(skuKey)) {
+                                      const colorCode = color.substring(0, 3).toUpperCase();
+                                      const sizeCode = size.toUpperCase();
+                                      const skuCode = `${brandPrefix}-${categoryPrefix}-${colorCode}-${sizeCode}`;
+                                      newSkuCodes.push({
+                                        size: size,
+                                        color: color,
+                                        sku: skuCode,
+                                        stock: 0
+                                      });
+                                    }
+                                  });
+                                });
+                                
+                                setSelectedProduct({
+                                  ...selectedProduct,
+                                  skuCodes: newSkuCodes
+                                });
+                              }}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                            >
+                              Generate SKUs for All Variants
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Sizes Tab */}
+                    {variantTab === 'sizes' && (
+                      <div>
+                        <div className="mb-4">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Current Sizes:</p>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {(selectedProduct.sizes ? selectedProduct.sizes.split(', ') : []).map((size, index) => (
+                              <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                                <span className="text-sm">{size}</span>
+                                <button 
+                                  type="button"
+                                  onClick={() => {
+                                    const sizes = selectedProduct.sizes.split(', ');
+                                    sizes.splice(index, 1);
+                                    setSelectedProduct({
+                                      ...selectedProduct,
+                                      sizes: sizes.join(', ')
+                                    });
+                                  }}
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Add New Size:</label>
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="text" 
+                              value={selectedProduct.newSizeInput || ''}
+                              onChange={(e) => setSelectedProduct({...selectedProduct, newSizeInput: e.target.value})}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Enter size (e.g., XL, 42)"
+                            />
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                if (selectedProduct.newSizeInput && selectedProduct.newSizeInput.trim()) {
+                                  const sizes = selectedProduct.sizes ? selectedProduct.sizes.split(', ') : [];
+                                  if (!sizes.includes(selectedProduct.newSizeInput.trim())) {
+                                    const newSizes = [...sizes, selectedProduct.newSizeInput.trim()].join(', ');
+                                    setSelectedProduct({
+                                      ...selectedProduct,
+                                      sizes: newSizes,
+                                      newSizeInput: ''
+                                    });
+                                  }
+                                }
+                              }}
+                              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Generate SKUs for new size */}
+                        {selectedProduct.sizes && selectedProduct.colors && (
+                          <div className="mt-4 p-2 bg-blue-50 rounded">
+                            <p className="text-xs text-blue-700 mb-2">
+                              New SKUs will be generated for the new size with existing colors
+                            </p>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const sizes = selectedProduct.sizes.split(', ');
+                                const colors = selectedProduct.colors.split(', ');
+                                const brandPrefix = selectedProduct.brandName ? selectedProduct.brandName.substring(0, 3).toUpperCase() : 'BRD';
+                                const categoryPrefix = selectedProduct.category ? selectedProduct.category.substring(0, 3).toUpperCase() : 'CAT';
+                                
+                                const existingSkus = selectedProduct.skuCodes || [];
+                                const existingSkuKeys = new Set(existingSkus.map(sku => `${sku.size}-${sku.color}`));
+                                
+                                const newSkuCodes = [...existingSkus];
+                                
+                                sizes.forEach(size => {
+                                  colors.forEach(color => {
+                                    const skuKey = `${size}-${color}`;
+                                    if (!existingSkuKeys.has(skuKey)) {
+                                      const colorCode = color.substring(0, 3).toUpperCase();
+                                      const sizeCode = size.toUpperCase();
+                                      const skuCode = `${brandPrefix}-${categoryPrefix}-${colorCode}-${sizeCode}`;
+                                      newSkuCodes.push({
+                                        size: size,
+                                        color: color,
+                                        sku: skuCode,
+                                        stock: 0
+                                      });
+                                    }
+                                  });
+                                });
+                                
+                                setSelectedProduct({
+                                  ...selectedProduct,
+                                  skuCodes: newSkuCodes
+                                });
+                              }}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+                            >
+                              Generate SKUs for All Variants
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* SEO Tab */}
+                    {variantTab === 'seo' && (
+                      <div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Product URL Slug</label>
+                          <input
+                            type="text"
+                            value={selectedProduct.slug || ''}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, slug: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="product-url-slug"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            URL: /products/{selectedProduct.slug || 'product-url-slug'}
+                          </p>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                          <input
+                            type="text"
+                            value={selectedProduct.metaTitle || ''}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, metaTitle: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="SEO Meta Title"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Recommended: 50-60 characters. Current: {selectedProduct.metaTitle ? selectedProduct.metaTitle.length : 0}
+                          </p>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                          <textarea
+                            value={selectedProduct.metaDescription || ''}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, metaDescription: e.target.value})}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="SEO Meta Description"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Recommended: 150-160 characters. Current: {selectedProduct.metaDescription ? selectedProduct.metaDescription.length : 0}
+                          </p>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Social Media Image</label>
+                          <div className="flex items-center space-x-4 mb-2">
+                            <input 
+                              type="file" 
+                              id="social-image"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    setSelectedProduct({...selectedProduct, socialImage: reader.result});
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <label 
+                              htmlFor="social-image"
+                              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer"
+                            >
+                              Upload Social Image
+                            </label>
+                          </div>
+                          {selectedProduct.socialImage && (
+                            <div className="mt-2">
+                              <img 
+                                src={selectedProduct.socialImage} 
+                                alt="Social Media"
+                                className="w-32 h-auto object-cover rounded border"
+                              />
+                              <button 
+                                type="button"
+                                onClick={() => setSelectedProduct({...selectedProduct, socialImage: null})}
+                                className="mt-2 text-red-500 hover:text-red-700 text-sm"
+                              >
+                                Remove Social Image
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Product Tags</label>
+                          <input
+                            type="text"
+                            value={selectedProduct.tags || ''}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, tags: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="tag1, tag2, tag3"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Separate tags with commas
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Pricing Tab */}
+                    {variantTab === 'pricing' && (
+                      <div>
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Pricing Strategy</label>
+                          <select
+                            value={selectedProduct.pricingStrategy || 'standard'}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, pricingStrategy: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="standard">Standard Pricing</option>
+                            <option value="tiered">Tiered Pricing</option>
+                            <option value="volume">Volume Discount</option>
+                            <option value="membership">Membership Pricing</option>
+                          </select>
+                        </div>
+                        
+                        {selectedProduct.pricingStrategy === 'tiered' && (
+                          <div className="mb-4 p-3 bg-gray-50 rounded">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Tiered Pricing</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="Min Qty"
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <span>-</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="Max Qty"
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  placeholder="Price"
+                                  className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <button className="px-2 py-1 bg-red-500 text-white rounded text-sm">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                              <button className="px-3 py-1 bg-green-600 text-white rounded text-sm">
+                                Add Tier
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {selectedProduct.pricingStrategy === 'volume' && (
+                          <div className="mb-4 p-3 bg-gray-50 rounded">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Volume Discount</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  placeholder="Min Qty"
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <span>%</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                  placeholder="Discount"
+                                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                                <button className="px-2 py-1 bg-red-500 text-white rounded text-sm">
+                                  <X size={14} />
+                                </button>
+                              </div>
+                              <button className="px-3 py-1 bg-green-600 text-white rounded text-sm">
+                                Add Discount
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="mb-4">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedProduct.freeShipping || false}
+                              onChange={(e) => setSelectedProduct({...selectedProduct, freeShipping: e.target.checked})}
+                              className="mr-2"
+                            />
+                            <span className="text-sm font-medium text-gray-700">Free Shipping</span>
+                          </label>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Class</label>
+                          <select
+                            value={selectedProduct.shippingClass || 'standard'}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, shippingClass: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="standard">Standard Shipping</option>
+                            <option value="express">Express Shipping</option>
+                            <option value="overnight">Overnight Shipping</option>
+                            <option value="international">International Shipping</option>
+                            <option value="local">Local Pickup</option>
+                          </select>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Tax Class</label>
+                          <select
+                            value={selectedProduct.taxClass || 'standard'}
+                            onChange={(e) => setSelectedProduct({...selectedProduct, taxClass: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="standard">Standard Tax</option>
+                            <option value="reduced">Reduced Tax</option>
+                            <option value="zero">Zero Tax</option>
+                            <option value="exempt">Tax Exempt</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2 mt-6">
+                    <button
+                      onClick={() => setShowStockModal(false)}
+                      className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        const updatedProduct = { ...selectedProduct };
+                        
+                        // Initialize stock history if it doesn't exist
+                        if (!updatedProduct.stockHistory) {
+                          updatedProduct.stockHistory = [];
+                        }
+                        
+                        // Handle stock updates
+                        if (variantTab === 'stock') {
+                          updatedProduct.stockHistory.push({
+                            date: new Date().toISOString(),
+                            previousStock: updatedProduct.stockQuantity || 0,
+                            updateType: stockUpdateType
+                          });
+                          
+                          if (updatedProduct.skuCodes && updatedProduct.skuCodes.length > 0) {
+                            updatedProduct.skuCodes = updatedProduct.skuCodes.map(sku => {
+                              const updatedSku = { ...sku };
+                              if (stockUpdateType === 'add') {
+                                updatedSku.stock = (sku.stock || 0) + (parseInt(sku.addStock) || 0);
+                                delete updatedSku.addStock;
+                              } else {
+                                updatedSku.stock = parseInt(sku.newStock) || 0;
+                                delete updatedSku.newStock;
+                              }
+                              return updatedSku;
+                            });
+                            
+                            updatedProduct.stockQuantity = updatedProduct.skuCodes.reduce(
+                              (sum, sku) => sum + (parseInt(sku.stock) || 0), 
+                              0
+                            );
+                          } else {
+                            if (stockUpdateType === 'add') {
+                              updatedProduct.stockQuantity = (updatedProduct.stockQuantity || 0) + (parseInt(updatedProduct.addStock) || 0);
+                              delete updatedProduct.addStock;
+                            } else {
+                              updatedProduct.stockQuantity = parseInt(updatedProduct.newStock) || 0;
+                              delete updatedProduct.newStock;
+                            }
+                          }
+                        }
+                        
+                        // Clean up temporary inputs
+                        delete updatedProduct.newColorInput;
+                        delete updatedProduct.newSizeInput;
+                        
+                        // Add last updated timestamp
+                        updatedProduct.lastUpdated = new Date().toISOString();
+                        
+                        // Update the product in the products array
+                        const updatedProducts = products.map(p => 
+                          p.id === updatedProduct.id ? updatedProduct : p
+                        );
+                        setProducts(updatedProducts);
+                        
+                        // Close the modal
+                        setShowStockModal(false);
+                        
+                        // Show success message
+                        alert(`${variantTab === 'stock' 
+                          ? `Stock ${stockUpdateType === 'add' ? 'added' : 'updated'}`
+                          : variantTab === 'colors' 
+                          ? 'Colors updated'
+                          : variantTab === 'sizes'
+                          ? 'Sizes updated'
+                          : variantTab === 'seo'
+                          ? 'SEO details updated'
+                          : 'Pricing updated'
+                        } successfully!`);
+                      }}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      {variantTab === 'stock' 
+                        ? (stockUpdateType === 'add' ? 'Add Stock' : 'Update Stock')
+                        : 'Update Product'
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        ); 
+        );
         
       case 'addproduct':
         return (
@@ -7342,974 +8869,886 @@ function BrandOwnerDashboard({ user, onLogout }) {
             </div>
             
             <form onSubmit={handleProductSubmit} className="space-y-6">
-              {/* Basic Information Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Basic Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
-                    <input 
-                      type="text" 
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({...productForm, name: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter product name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Brand Name</label>
-                    <input 
-                      type="text" 
-                      value={productForm.brandName}
-                      onChange={(e) => setProductForm({...productForm, brandName: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter brand name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Price (₹) *</label>
-                    <input 
-                      type="number" 
-                      value={productForm.price}
-                      onChange={(e) => {
-                        const price = e.target.value;
-                        const credits = price && !isNaN(price) && parseFloat(price) > 0 
-                          ? (parseFloat(price) / 100).toFixed(2) 
-                          : '';
-                        setProductForm({
-                          ...productForm, 
-                          price: price,
-                          credits: credits
-                        });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter price"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Credits</label>
-                    <div className="flex items-center">
-                      <input 
-                        type="text" 
-                        value={productForm.credits ? `${productForm.credits} Credits` : ''}
-                        readOnly
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700"
-                        placeholder="Credits will be calculated automatically"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Discounted Price (₹)</label>
-                    <input 
-                      type="number" 
-                      value={productForm.discountedPrice}
-                      onChange={(e) => setProductForm({...productForm, discountedPrice: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter discounted price"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Offer</label>
-                    <input 
-                      type="text" 
-                      value={productForm.offer}
-                      onChange={(e) => setProductForm({...productForm, offer: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 20% OFF"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <select 
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Men's Clothing">Men's Clothing</option>
-                      <option value="Women's Clothing">Women's Clothing</option>
-                      <option value="Kids Clothing">Kids Clothing</option>
-                      <option value="Ethnic Wear">Ethnic Wear</option>
-                      <option value="Western Wear">Western Wear</option>
-                      <option value="Sportswear">Sportswear</option>
-                      <option value="Lingerie & Sleepwear">Lingerie & Sleepwear</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Category</label>
-                    <select 
-                      value={productForm.subCategory}
-                      onChange={(e) => setProductForm({...productForm, subCategory: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Sub-Category</option>
-                      <option value="Tops">Tops</option>
-                      <option value="Bottoms">Bottoms</option>
-                      <option value="Dresses">Dresses</option>
-                      <option value="Sarees">Sarees</option>
-                      <option value="Kurtas & Kurtis">Kurtas & Kurtis</option>
-                      <option value="Shirts">Shirts</option>
-                      <option value="T-Shirts">T-Shirts</option>
-                      <option value="Jeans">Jeans</option>
-                      <option value="Trousers">Trousers</option>
-                      <option value="Skirts">Skirts</option>
-                      <option value="Shorts">Shorts</option>
-                      <option value="Jumpsuits">Jumpsuits</option>
-                      <option value="Blazers & Coats">Blazers & Coats</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Collection</label>
-                    <input 
-                      type="text" 
-                      value={productForm.collection || ''}
-                      onChange={(e) => setProductForm({...productForm, collection: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Summer Collection 2023"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Season</label>
-                    <select 
-                      value={productForm.season || ''}
-                      onChange={(e) => setProductForm({...productForm, season: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Season</option>
-                      <option value="All Season">All Season</option>
-                      <option value="Summer">Summer</option>
-                      <option value="Winter">Winter</option>
-                      <option value="Spring">Spring</option>
-                      <option value="Monsoon">Monsoon</option>
-                      <option value="Festive">Festive</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">SKU / Product Code</label>
-                    <input 
-                      type="text" 
-                      value={productForm.sku}
-                      onChange={(e) => setProductForm({...productForm, sku: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter SKU"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">HSN Code</label>
-                    <input 
-                      type="text" 
-                      value={productForm.hsnCode}
-                      onChange={(e) => setProductForm({...productForm, hsnCode: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter HSN code"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Product Specifications Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Product Specifications</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fit</label>
-                    <select 
-                      value={productForm.fitType}
-                      onChange={(e) => setProductForm({...productForm, fitType: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Fit</option>
-                      <option value="Regular Fit">Regular Fit</option>
-                      <option value="Slim Fit">Slim Fit</option>
-                      <option value="Oversized">Oversized</option>
-                      <option value="Skinny Fit">Skinny Fit</option>
-                      <option value="Relaxed Fit">Relaxed Fit</option>
-                      <option value="Loose Fit">Loose Fit</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                    <input 
-                      type="text" 
-                      value={productForm.type}
-                      onChange={(e) => setProductForm({...productForm, type: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., T-Shirt, Jeans, Dress"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Length</label>
-                    <select 
-                      value={productForm.length}
-                      onChange={(e) => setProductForm({...productForm, length: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Length</option>
-                      <option value="Cropped">Cropped</option>
-                      <option value="Regular">Regular</option>
-                      <option value="Long">Long</option>
-                      <option value="Midi">Midi</option>
-                      <option value="Maxi">Maxi</option>
-                      <option value="Mini">Mini</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Closure Type</label>
-                    <select 
-                      value={productForm.closureType}
-                      onChange={(e) => setProductForm({...productForm, closureType: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Closure</option>
-                      <option value="Button">Button</option>
-                      <option value="Zipper">Zipper</option>
-                      <option value="Drawstring">Drawstring</option>
-                      <option value="Hook & Eye">Hook & Eye</option>
-                      <option value="Elastic">Elastic</option>
-                      <option value="Pullover">Pullover</option>
-                      <option value="Wrap">Wrap</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Neck Type</label>
-                    <select 
-                      value={productForm.neckType}
-                      onChange={(e) => setProductForm({...productForm, neckType: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Neck Type</option>
-                      <option value="Round Neck">Round Neck</option>
-                      <option value="V-Neck">V-Neck</option>
-                      <option value="Collar">Collar</option>
-                      <option value="Hooded">Hooded</option>
-                      <option value="Cowl Neck">Cowl Neck</option>
-                      <option value="Boat Neck">Boat Neck</option>
-                      <option value="Square Neck">Square Neck</option>
-                      <option value="Off Shoulder">Off Shoulder</option>
-                      <option value="Halter Neck">Halter Neck</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sleeve Type</label>
-                    <select 
-                      value={productForm.sleeveType}
-                      onChange={(e) => setProductForm({...productForm, sleeveType: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Sleeve Type</option>
-                      <option value="Short Sleeve">Short Sleeve</option>
-                      <option value="Long Sleeve">Long Sleeve</option>
-                      <option value="Sleeveless">Sleeveless</option>
-                      <option value="Three-Quarter">Three-Quarter</option>
-                      <option value="Cap Sleeve">Cap Sleeve</option>
-                      <option value="Raglan Sleeve">Raglan Sleeve</option>
-                      <option value="Bell Sleeve">Bell Sleeve</option>
-                      <option value="Cold Shoulder">Cold Shoulder</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Occasion</label>
-                    <select 
-                      value={productForm.occasion}
-                      onChange={(e) => setProductForm({...productForm, occasion: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Occasion</option>
-                      <option value="Casual">Casual</option>
-                      <option value="Formal">Formal</option>
-                      <option value="Party">Party</option>
-                      <option value="Office">Office</option>
-                      <option value="Festive">Festive</option>
-                      <option value="Beach">Beach</option>
-                      <option value="Date Night">Date Night</option>
-                      <option value="Travel">Travel</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Stretchability</label>
-                    <select 
-                      value={productForm.stretchability}
-                      onChange={(e) => setProductForm({...productForm, stretchability: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Stretchability</option>
-                      <option value="No Stretch">No Stretch</option>
-                      <option value="Low Stretch">Low Stretch</option>
-                      <option value="Medium Stretch">Medium Stretch</option>
-                      <option value="High Stretch">High Stretch</option>
-                      <option value="Super Stretch">Super Stretch</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Pattern</label>
-                    <select 
-                      value={productForm.pattern}
-                      onChange={(e) => setProductForm({...productForm, pattern: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Pattern</option>
-                      <option value="Solid">Solid</option>
-                      <option value="Striped">Striped</option>
-                      <option value="Checked">Checked</option>
-                      <option value="Printed">Printed</option>
-                      <option value="Embroidered">Embroidered</option>
-                      <option value="Floral">Floral</option>
-                      <option value="Geometric">Geometric</option>
-                      <option value="Abstract">Abstract</option>
-                      <option value="Polka Dots">Polka Dots</option>
-                      <option value="Animal Print">Animal Print</option>
-                      <option value="Paisley">Paisley</option>
-                      <option value="Tie-Dye">Tie-Dye</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Color Variants Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Color Variants</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Available Colors</label>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <input 
-                        type="text" 
-                        value={productForm.colorInput || ''}
-                        onChange={(e) => setProductForm({...productForm, colorInput: e.target.value})}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter color name"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          if (productForm.colorInput && productForm.colorInput.trim()) {
-                            const colors = productForm.colors ? productForm.colors.split(', ') : [];
-                            if (!colors.includes(productForm.colorInput.trim())) {
-                              setProductForm({
-                                ...productForm, 
-                                colors: [...colors, productForm.colorInput.trim()].join(', '),
-                                colorInput: ''
-                              });
-                            }
-                          }
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(productForm.colors ? productForm.colors.split(', ') : []).map((color, index) => (
-                        <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
-                          <span className="text-sm">{color}</span>
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const colors = productForm.colors.split(', ');
-                              colors.splice(index, 1);
-                              setProductForm({...productForm, colors: colors.join(', ')});
-                            }}
-                            className="ml-2 text-red-500 hover:text-red-700"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Color</label>
-                    <input 
-                      type="text" 
-                      value={productForm.primaryColor || ''}
-                      onChange={(e) => setProductForm({...productForm, primaryColor: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter primary color"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Size Chart Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Size Chart</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Size Chart Image</label>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <input 
-                        type="file" 
-                        id="size-chart"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setProductForm({...productForm, sizeChartImage: reader.result});
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      <label 
-                        htmlFor="size-chart"
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Size Chart
-                      </label>
-                    </div>
-                    {productForm.sizeChartImage && (
-                      <div className="mt-2">
-                        <img 
-                          src={productForm.sizeChartImage} 
-                          alt="Size Chart"
-                          className="w-64 h-auto object-cover rounded border"
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => setProductForm({...productForm, sizeChartImage: null})}
-                          className="mt-2 text-red-500 hover:text-red-700"
-                        >
-                          Remove Size Chart
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Size Guide Text</label>
-                    <textarea 
-                      value={productForm.sizeGuide || ''}
-                      onChange={(e) => setProductForm({...productForm, sizeGuide: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="Enter size guide information"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Available Sizes</label>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <input 
-                        type="text" 
-                        value={productForm.sizeInput || ''}
-                        onChange={(e) => setProductForm({...productForm, sizeInput: e.target.value})}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter size (e.g., S, M, L)"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          if (productForm.sizeInput && productForm.sizeInput.trim()) {
-                            const sizes = productForm.sizes ? productForm.sizes.split(', ') : [];
-                            if (!sizes.includes(productForm.sizeInput.trim())) {
-                              setProductForm({
-                                ...productForm, 
-                                sizes: [...sizes, productForm.sizeInput.trim()].join(', '),
-                                sizeInput: ''
-                              });
-                            }
-                          }
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {(productForm.sizes ? productForm.sizes.split(', ') : []).map((size, index) => (
-                        <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
-                          <span className="text-sm">{size}</span>
-                          <button 
-                            type="button"
-                            onClick={() => {
-                              const sizes = productForm.sizes.split(', ');
-                              sizes.splice(index, 1);
-                              setProductForm({...productForm, sizes: sizes.join(', ')});
-                            }}
-                            className="ml-2 text-red-500 hover:text-red-700"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Fabric Details Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Fabric Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Fabric</label>
-                    <select 
-                      value={productForm.primaryFabric || ''}
-                      onChange={(e) => setProductForm({...productForm, primaryFabric: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Fabric</option>
-                      <option value="Cotton">Cotton</option>
-                      <option value="Silk">Silk</option>
-                      <option value="Linen">Linen</option>
-                      <option value="Wool">Wool</option>
-                      <option value="Polyester">Polyester</option>
-                      <option value="Rayon">Rayon</option>
-                      <option value="Nylon">Nylon</option>
-                      <option value="Viscose">Viscose</option>
-                      <option value="Acrylic">Acrylic</option>
-                      <option value="Spandex">Spandex</option>
-                      <option value="Denim">Denim</option>
-                      <option value="Velvet">Velvet</option>
-                      <option value="Chiffon">Chiffon</option>
-                      <option value="Georgette">Georgette</option>
-                      <option value="Satin">Satin</option>
-                      <option value="Crepe">Crepe</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Composition</label>
-                    <input 
-                      type="text" 
-                      value={productForm.fabricComposition || ''}
-                      onChange={(e) => setProductForm({...productForm, fabricComposition: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 80% Cotton, 20% Polyester"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Weight</label>
-                    <input 
-                      type="text" 
-                      value={productForm.fabricWeight || ''}
-                      onChange={(e) => setProductForm({...productForm, fabricWeight: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Light, Medium, Heavy"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Transparency</label>
-                    <select 
-                      value={productForm.fabricTransparency || ''}
-                      onChange={(e) => setProductForm({...productForm, fabricTransparency: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Transparency</option>
-                      <option value="Opaque">Opaque</option>
-                      <option value="Semi-Transparent">Semi-Transparent</option>
-                      <option value="Transparent">Transparent</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Properties</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {["Breathable", "Water Resistant", "UV Protection", "Wrinkle Free", 
-                        "Quick Dry", "Anti-Pilling", "Hypoallergenic", "Eco-Friendly"].map((property) => (
-                        <label key={property} className="flex items-center">
-                          <input 
-                            type="checkbox" 
-                            checked={productForm.fabricProperties && productForm.fabricProperties.includes(property)}
-                            onChange={(e) => {
-                              const properties = productForm.fabricProperties ? productForm.fabricProperties.split(', ') : [];
-                              if (e.target.checked) {
-                                properties.push(property);
-                              } else {
-                                const index = properties.indexOf(property);
-                                if (index > -1) {
-                                  properties.splice(index, 1);
-                                }
-                              }
-                              setProductForm({...productForm, fabricProperties: properties.join(', ')});
-                            }}
-                            className="mr-2"
-                          />
-                          <span className="text-sm">{property}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Model Information Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Model Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Model Height</label>
-                    <input 
-                      type="text" 
-                      value={productForm.modelHeight || ''}
-                      onChange={(e) => setProductForm({...productForm, modelHeight: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 5'7&quot; (170 cm)"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Model Wearing Size</label>
-                    <input 
-                      type="text" 
-                      value={productForm.modelWearingSize || ''}
-                      onChange={(e) => setProductForm({...productForm, modelWearingSize: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., M, L, 38"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fit Note</label>
-                    <textarea 
-                      value={productForm.fitNote || ''}
-                      onChange={(e) => setProductForm({...productForm, fitNote: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Any special notes about the fit of the garment"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Descriptions Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Descriptions</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
-                    <textarea 
-                      value={productForm.shortDescription}
-                      onChange={(e) => setProductForm({...productForm, shortDescription: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Brief product description"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Description</label>
-                    <textarea 
-                      value={productForm.fullDescription}
-                      onChange={(e) => setProductForm({...productForm, fullDescription: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={4}
-                      placeholder="Detailed product description"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Key Features / Highlights</label>
-                    <textarea 
-                      value={productForm.keyFeatures}
-                      onChange={(e) => setProductForm({...productForm, keyFeatures: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="List key features of product"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Styling Tips</label>
-                    <textarea 
-                      value={productForm.stylingTips || ''}
-                      onChange={(e) => setProductForm({...productForm, stylingTips: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="Provide styling tips for this product"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Care Instructions Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Care Instructions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Wash Method</label>
-                    <select 
-                      value={productForm.washMethod}
-                      onChange={(e) => setProductForm({...productForm, washMethod: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Wash Method</option>
-                      <option value="Machine Wash">Machine Wash</option>
-                      <option value="Hand Wash">Hand Wash</option>
-                      <option value="Dry Clean Only">Dry Clean Only</option>
-                      <option value="Do Not Wash">Do Not Wash</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Wash Temperature</label>
-                    <select 
-                      value={productForm.washTemperature || ''}
-                      onChange={(e) => setProductForm({...productForm, washTemperature: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Temperature</option>
-                      <option value="Cold Water">Cold Water</option>
-                      <option value="Warm Water">Warm Water</option>
-                      <option value="Hot Water">Hot Water</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Bleach</label>
-                    <select 
-                      value={productForm.bleach || ''}
-                      onChange={(e) => setProductForm({...productForm, bleach: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Option</option>
-                      <option value="Do Not Bleach">Do Not Bleach</option>
-                      <option value="Non-Chlorine Bleach">Non-Chlorine Bleach</option>
-                      <option value="Chlorine Bleach">Chlorine Bleach</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Dry Method</label>
-                    <select 
-                      value={productForm.dryMethod || ''}
-                      onChange={(e) => setProductForm({...productForm, dryMethod: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Dry Method</option>
-                      <option value="Tumble Dry Low">Tumble Dry Low</option>
-                      <option value="Tumble Dry Medium">Tumble Dry Medium</option>
-                      <option value="Tumble Dry High">Tumble Dry High</option>
-                      <option value="Do Not Tumble Dry">Do Not Tumble Dry</option>
-                      <option value="Line Dry">Line Dry</option>
-                      <option value="Drip Dry">Drip Dry</option>
-                      <option value="Flat Dry">Flat Dry</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ironing Details</label>
-                    <select 
-                      value={productForm.ironingDetails}
-                      onChange={(e) => setProductForm({...productForm, ironingDetails: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Ironing Option</option>
-                      <option value="Do Not Iron">Do Not Iron</option>
-                      <option value="Iron Low Heat">Iron Low Heat</option>
-                      <option value="Iron Medium Heat">Iron Medium Heat</option>
-                      <option value="Iron High Heat">Iron High Heat</option>
-                      <option value="Steam Iron">Steam Iron</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Special Care</label>
-                    <input 
-                      type="text" 
-                      value={productForm.specialCare || ''}
-                      onChange={(e) => setProductForm({...productForm, specialCare: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Any special care instructions"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Media Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Media</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
-                    <p className="text-xs text-gray-500 mb-2">Upload front, back, sides, close-up details, fabric texture, model photos, and size chart</p>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <input 
-                        type="file" 
-                        id="product-images"
-                        accept="image/*"
-                        multiple
-                        onChange={handleProductImageUpload}
-                        className="hidden"
-                      />
-                      <label 
-                        htmlFor="product-images"
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Images
-                      </label>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {productForm.images.map((image, idx) => (
-                        <div key={idx} className="relative">
-                          <img 
-                            src={image} 
-                            alt={`Product ${idx + 1}`}
-                            className="w-full h-24 object-cover rounded border"
-                          />
-                          <button 
-                            type="button"
-                            onClick={() => removeProductImage(idx)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Video Link</label>
-                    <input 
-                      type="url" 
-                      value={productForm.videoLink}
-                      onChange={(e) => setProductForm({...productForm, videoLink: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://example.com/video"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Instagram Video Link</label>
-                    <input 
-                      type="url" 
-                      value={productForm.instagramLink}
-                      onChange={(e) => setProductForm({...productForm, instagramLink: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://instagram.com/..."
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Logistics Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Logistics</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Package Dimensions</label>
-                    <input 
-                      type="text" 
-                      value={productForm.packageDimensions}
-                      onChange={(e) => setProductForm({...productForm, packageDimensions: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 30x20x5 cm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
-                    <input 
-                      type="text" 
-                      value={productForm.weight}
-                      onChange={(e) => setProductForm({...productForm, weight: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 500g"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Availability</label>
-                    <select 
-                      value={productForm.deliveryAvailability}
-                      onChange={(e) => setProductForm({...productForm, deliveryAvailability: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Option</option>
-                      <option value="Pan India">Pan India</option>
-                      <option value="Metro Cities">Metro Cities</option>
-                      <option value="Select Cities">Select Cities</option>
-                      <option value="International">International</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">COD Option</label>
-                    <select 
-                      value={productForm.codOption}
-                      onChange={(e) => setProductForm({...productForm, codOption: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Option</option>
-                      <option value="Available">Available</option>
-                      <option value="Not Available">Not Available</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Seller Address</label>
-                    <textarea 
-                      value={productForm.sellerAddress}
-                      onChange={(e) => setProductForm({...productForm, sellerAddress: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Enter seller address"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Return Policy</label>
-                    <textarea 
-                      value={productForm.returnPolicy}
-                      onChange={(e) => setProductForm({...productForm, returnPolicy: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="Enter return policy details"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Compliance Section */}
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">Compliance</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">GST Percentage</label>
-                    <select 
-                      value={productForm.gstPercentage}
-                      onChange={(e) => setProductForm({...productForm, gstPercentage: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select GST</option>
-                      <option value="0%">0%</option>
-                      <option value="5%">5%</option>
-                      <option value="12%">12%</option>
-                      <option value="18%">18%</option>
-                      <option value="28%">28%</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Country of Origin</label>
-                    <input 
-                      type="text" 
-                      value={productForm.countryOfOrigin}
-                      onChange={(e) => setProductForm({...productForm, countryOfOrigin: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., India"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer / Importer Details</label>
-                    <textarea 
-                      value={productForm.manufacturerDetails}
-                      onChange={(e) => setProductForm({...productForm, manufacturerDetails: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Enter manufacturer or importer details"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <button 
-                  type="button"
-                  onClick={() => {
-                    resetProductForm();
-                    setActiveTab('products');
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  {editingProduct ? 'Update Product' : 'Add Product'}
-                </button>
-              </div>
+  {/* Basic Information Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Basic Product Information</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Product Name / Title *</label>
+        <input 
+          type="text" 
+          value={productForm.name}
+          onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter product name"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Brand Name *</label>
+        <input 
+          type="text" 
+          value={productForm.brandName}
+          onChange={(e) => setProductForm({...productForm, brandName: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter brand name"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+        <select 
+          value={productForm.category}
+          onChange={(e) => {
+            setProductForm({
+              ...productForm, 
+              category: e.target.value, 
+              subCategory: '' // Reset subcategory when category changes
+            });
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="">Select Category</option>
+          <option value="Men's Clothing">Men's Clothing</option>
+          <option value="Women's Clothing">Women's Clothing</option>
+          <option value="Ethnic Wear">Ethnic Wear</option>
+          <option value="Western Wear">Western Wear</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Category *</label>
+        <select 
+          value={productForm.subCategory}
+          onChange={(e) => setProductForm({...productForm, subCategory: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+          disabled={!productForm.category}
+        >
+          <option value="">{productForm.category ? "Select Sub-Category" : "Select Category First"}</option>
+          {productForm.category && categorySubCategories[productForm.category]?.map((sub) => (
+            <option key={sub} value={sub}>{sub}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Product MRP (₹) *</label>
+        <input 
+          type="number" 
+          value={productForm.price}
+          onChange={(e) => {
+            const price = e.target.value;
+            setProductForm({
+              ...productForm, 
+              price: price,
+              // If Selling Price is empty, default it to MRP for now, or calculate GST inclusive
+              sellingPrice: productForm.sellingPrice || price
+            });
+          }}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter MRP"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Selling Price (₹) *</label>
+        <input 
+          type="number" 
+          value={productForm.sellingPrice || productForm.price}
+          onChange={(e) => setProductForm({...productForm, sellingPrice: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter Selling Price"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">GST Inclusive Price (₹) *</label>
+        <input 
+          type="text" 
+          value={productForm.sellingPrice || productForm.price || '0.00'}
+          readOnly
+          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
+          placeholder="Auto-calculated"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">GST Rate (%) *</label>
+        <select 
+          value={productForm.gstPercentage}
+          onChange={(e) => setProductForm({...productForm, gstPercentage: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="">Select GST</option>
+          <option value="0%">0%</option>
+          <option value="5%">5%</option>
+          <option value="12%">12%</option>
+          <option value="18%">18%</option>
+          <option value="28%">28%</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">HSN Code *</label>
+        <input 
+          type="text" 
+          value={productForm.hsnCode}
+          onChange={(e) => setProductForm({...productForm, hsnCode: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Auto-generated based on norms"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Country of Origin *</label>
+        <input 
+          type="text" 
+          value={productForm.countryOfOrigin}
+          onChange={(e) => setProductForm({...productForm, countryOfOrigin: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., India"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Material / Fabric *</label>
+        <select 
+          value={productForm.primaryFabric || ''}
+          onChange={(e) => setProductForm({...productForm, primaryFabric: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="">Select Fabric</option>
+          <option value="Cotton">Cotton</option>
+          <option value="Silk">Silk</option>
+          <option value="Linen">Linen</option>
+          <option value="Wool">Wool</option>
+          <option value="Polyester">Polyester</option>
+          <option value="Rayon">Rayon</option>
+          <option value="Nylon">Nylon</option>
+          <option value="Viscose">Viscose</option>
+          <option value="Acrylic">Acrylic</option>
+          <option value="Spandex">Spandex</option>
+          <option value="Denim">Denim</option>
+          <option value="Velvet">Velvet</option>
+          <option value="Chiffon">Chiffon</option>
+          <option value="Georgette">Georgette</option>
+          <option value="Satin">Satin</option>
+          <option value="Crepe">Crepe</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fit / Pattern *</label>
+        <select 
+          value={productForm.fitType}
+          onChange={(e) => setProductForm({...productForm, fitType: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+        >
+          <option value="">Select Fit</option>
+          <option value="Regular Fit">Regular Fit</option>
+          <option value="Slim Fit">Slim Fit</option>
+          <option value="Oversized">Oversized</option>
+          <option value="Skinny Fit">Skinny Fit</option>
+          <option value="Relaxed Fit">Relaxed Fit</option>
+          <option value="Loose Fit">Loose Fit</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
+        <input 
+          type="number" 
+          value={productForm.stockQuantity}
+          onChange={(e) => setProductForm({...productForm, stockQuantity: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter total stock"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Weight (grams/kg) *</label>
+        <input 
+          type="text" 
+          value={productForm.weight}
+          onChange={(e) => setProductForm({...productForm, weight: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 500g"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions (L×W×H) *</label>
+        <input 
+          type="text" 
+          value={productForm.packageDimensions}
+          onChange={(e) => setProductForm({...productForm, packageDimensions: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 30x20x5 cm"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse / Pickup Location *</label>
+        <textarea 
+          value={productForm.warehouseLocation}
+          onChange={(e) => setProductForm({...productForm, warehouseLocation: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter warehouse location"
+          required
+        />
+      </div>
+      <div className="md:col-span-2">
+         <label className="block text-sm font-medium text-gray-700 mb-2">Product Description *</label>
+         <textarea 
+           value={productForm.fullDescription}
+           onChange={(e) => setProductForm({...productForm, fullDescription: e.target.value})}
+           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+           rows={4}
+           placeholder="Detailed product description"
+           required
+         />
+      </div>
+    </div>
+  </div>
+  
+  {/* Color Variants Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Color and Size Availability *</h4>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Available Colors</label>
+        <div className="flex items-center space-x-2 mb-2">
+          <input 
+            type="text" 
+            value={productForm.colorInput || ''}
+            onChange={(e) => setProductForm({...productForm, colorInput: e.target.value})}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter color name"
+          />
+          <button 
+            type="button"
+            onClick={() => {
+              if (productForm.colorInput && productForm.colorInput.trim()) {
+                const colors = productForm.colors ? productForm.colors.split(', ') : [];
+                if (!colors.includes(productForm.colorInput.trim())) {
+                  setProductForm({
+                    ...productForm, 
+                    colors: [...colors, productForm.colorInput.trim()].join(', '),
+                    colorInput: ''
+                  });
+                }
+              }
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            Add
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(productForm.colors ? productForm.colors.split(', ') : []).map((color, index) => (
+            <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+              <span className="text-sm">{color}</span>
+              <button 
+                type="button"
+                onClick={() => {
+                  const colors = productForm.colors.split(', ');
+                  colors.splice(index, 1);
+                  setProductForm({...productForm, colors: colors.join(', ')});
+                }}
+                className="ml-2 text-red-500 hover:text-red-700"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Available Sizes</label>
+        <div className="flex items-center space-x-2 mb-2">
+          <input 
+            type="text" 
+            value={productForm.sizeInput || ''}
+            onChange={(e) => setProductForm({...productForm, sizeInput: e.target.value})}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter size (e.g., S, M, L)"
+          />
+          <button 
+            type="button"
+            onClick={() => {
+              if (productForm.sizeInput && productForm.sizeInput.trim()) {
+                const sizes = productForm.sizes ? productForm.sizes.split(', ') : [];
+                if (!sizes.includes(productForm.sizeInput.trim())) {
+                  setProductForm({
+                    ...productForm, 
+                    sizes: [...sizes, productForm.sizeInput.trim()].join(', '),
+                    sizeInput: ''
+                  });
+                }
+              }
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            Add
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(productForm.sizes ? productForm.sizes.split(', ') : []).map((size, index) => (
+            <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+              <span className="text-sm">{size}</span>
+              <button 
+                type="button"
+                onClick={() => {
+                  const sizes = productForm.sizes.split(', ');
+                  sizes.splice(index, 1);
+                  setProductForm({...productForm, sizes: sizes.join(', ')});
+                }}
+                className="ml-2 text-red-500 hover:text-red-700"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* SKU Code Generation <p className="text-xs text-gray-500 mb-2">Platform auto-generates SKU codes based on size and color combinations</p> */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">SKU Codes *</label>
+      
+      {/* Generate SKU Codes Button */}
+      <button 
+        type="button"
+        onClick={() => {
+          // Generate SKU codes based on size and color combinations
+          if (productForm.sizes && productForm.colors) {
+            const sizes = productForm.sizes.split(', ');
+            const colors = productForm.colors.split(', ');
+            const brandPrefix = productForm.brandName ? productForm.brandName.substring(0, 3).toUpperCase() : 'BRD';
+            const categoryPrefix = productForm.subCategory ? productForm.subCategory.substring(0, 3).toUpperCase() : 'CAT';
+            
+            const skuCodes = [];
+            sizes.forEach(size => {
+              colors.forEach(color => {
+                const colorCode = color.substring(0, 3).toUpperCase();
+                const sizeCode = size.toUpperCase();
+                const skuCode = `${brandPrefix}-${categoryPrefix}-${colorCode}-${sizeCode}`;
+                skuCodes.push({
+                  size: size,
+                  color: color,
+                  sku: skuCode
+                });
+              });
+            });
+            
+            setProductForm({
+              ...productForm,
+              skuCodes: skuCodes
+            });
+          }
+        }}
+        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 mb-3"
+      >
+        Generate SKU Codes
+      </button>
+      
+      {/* Display SKU Codes Table */}
+      {productForm.skuCodes && productForm.skuCodes.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Size
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Color
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  SKU Code
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {productForm.skuCodes.map((sku, index) => (
+                <tr key={index}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {sku.size}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {sku.color}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {sku.sku}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+    </div>
+  </div>
+  
+  {/* Size Chart Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Size Availability *</h4>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Size Chart Image</label>
+        <div className="flex items-center space-x-4 mb-2">
+          <input 
+            type="file" 
+            id="size-chart"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  setProductForm({...productForm, sizeChartImage: reader.result});
+                };
+                reader.readAsDataURL(file);
+              }
+            }}
+            className="hidden"
+          />
+          <label 
+            htmlFor="size-chart"
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
+          >
+            <Upload size={16} className="mr-2" />
+            Upload Size Chart
+          </label>
+        </div>
+        {productForm.sizeChartImage && (
+          <div className="mt-2">
+            <img 
+              src={productForm.sizeChartImage} 
+              alt="Size Chart"
+              className="w-64 h-auto object-cover rounded border"
+            />
+            <button 
+              type="button"
+              onClick={() => setProductForm({...productForm, sizeChartImage: null})}
+              className="mt-2 text-red-500 hover:text-red-700"
+            >
+              Remove Size Chart
+            </button>
+          </div>
+        )}
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Size Guide Text</label>
+        <textarea 
+          value={productForm.sizeGuide || ''}
+          onChange={(e) => setProductForm({...productForm, sizeGuide: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={3}
+          placeholder="Enter size guide information"
+        />
+      </div>
+    </div>
+  </div>
+  
+  {/* Fabric Details Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Fabric Details</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Composition</label>
+        <input 
+          type="text" 
+          value={productForm.fabricComposition || ''}
+          onChange={(e) => setProductForm({...productForm, fabricComposition: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 80% Cotton, 20% Polyester"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Weight</label>
+        <input 
+          type="text" 
+          value={productForm.fabricWeight || ''}
+          onChange={(e) => setProductForm({...productForm, fabricWeight: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., Light, Medium, Heavy"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Transparency</label>
+        <select 
+          value={productForm.fabricTransparency || ''}
+          onChange={(e) => setProductForm({...productForm, fabricTransparency: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Transparency</option>
+          <option value="Opaque">Opaque</option>
+          <option value="Semi-Transparent">Semi-Transparent</option>
+          <option value="Transparent">Transparent</option>
+        </select>
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fabric Properties</label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {["Breathable", "Water Resistant", "UV Protection", "Wrinkle Free", 
+            "Quick Dry", "Anti-Pilling", "Hypoallergenic", "Eco-Friendly"].map((property) => (
+            <label key={property} className="flex items-center">
+              <input 
+                type="checkbox" 
+                checked={productForm.fabricProperties && productForm.fabricProperties.includes(property)}
+                onChange={(e) => {
+                  const properties = productForm.fabricProperties ? productForm.fabricProperties.split(', ') : [];
+                  if (e.target.checked) {
+                    properties.push(property);
+                  } else {
+                    const index = properties.indexOf(property);
+                    if (index > -1) {
+                      properties.splice(index, 1);
+                    }
+                  }
+                  setProductForm({...productForm, fabricProperties: properties.join(', ')});
+                }}
+                className="mr-2"
+              />
+              <span className="text-sm">{property}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {/* Model Information Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Model Information</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Model Height</label>
+        <input 
+          type="text" 
+          value={productForm.modelHeight || ''}
+          onChange={(e) => setProductForm({...productForm, modelHeight: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., 5'7&quot; (170 cm)"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Model Wearing Size</label>
+        <input 
+          type="text" 
+          value={productForm.modelWearingSize || ''}
+          onChange={(e) => setProductForm({...productForm, modelWearingSize: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g., M, L, 38"
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Fit Note</label>
+        <textarea 
+          value={productForm.fitNote || ''}
+          onChange={(e) => setProductForm({...productForm, fitNote: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          placeholder="Any special notes about the fit of the garment"
+        />
+      </div>
+    </div>
+  </div>
+  
+  {/* Descriptions Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Descriptions</h4>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
+        <textarea 
+          value={productForm.shortDescription}
+          onChange={(e) => setProductForm({...productForm, shortDescription: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          placeholder="Brief product description"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Key Features / Highlights</label>
+        <textarea 
+          value={productForm.keyFeatures}
+          onChange={(e) => setProductForm({...productForm, keyFeatures: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={3}
+          placeholder="List key features of product"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Styling Tips</label>
+        <textarea 
+          value={productForm.stylingTips || ''}
+          onChange={(e) => setProductForm({...productForm, stylingTips: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={3}
+          placeholder="Provide styling tips for this product"
+        />
+      </div>
+    </div>
+  </div>
+  
+  {/* Care Instructions Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Care Instructions *</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Wash Method</label>
+        <select 
+          value={productForm.washMethod}
+          onChange={(e) => setProductForm({...productForm, washMethod: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Wash Method</option>
+          <option value="Machine Wash">Machine Wash</option>
+          <option value="Hand Wash">Hand Wash</option>
+          <option value="Dry Clean Only">Dry Clean Only</option>
+          <option value="Do Not Wash">Do Not Wash</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Wash Temperature</label>
+        <select 
+          value={productForm.washTemperature || ''}
+          onChange={(e) => setProductForm({...productForm, washTemperature: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Temperature</option>
+          <option value="Cold Water">Cold Water</option>
+          <option value="Warm Water">Warm Water</option>
+          <option value="Hot Water">Hot Water</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Bleach</label>
+        <select 
+          value={productForm.bleach || ''}
+          onChange={(e) => setProductForm({...productForm, bleach: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Option</option>
+          <option value="Do Not Bleach">Do Not Bleach</option>
+          <option value="Non-Chlorine Bleach">Non-Chlorine Bleach</option>
+          <option value="Chlorine Bleach">Chlorine Bleach</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Dry Method</label>
+        <select 
+          value={productForm.dryMethod || ''}
+          onChange={(e) => setProductForm({...productForm, dryMethod: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Dry Method</option>
+          <option value="Tumble Dry Low">Tumble Dry Low</option>
+          <option value="Tumble Dry Medium">Tumble Dry Medium</option>
+          <option value="Tumble Dry High">Tumble Dry High</option>
+          <option value="Do Not Tumble Dry">Do Not Tumble Dry</option>
+          <option value="Line Dry">Line Dry</option>
+          <option value="Drip Dry">Drip Dry</option>
+          <option value="Flat Dry">Flat Dry</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Ironing Details</label>
+        <select 
+          value={productForm.ironingDetails}
+          onChange={(e) => setProductForm({...productForm, ironingDetails: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Ironing Option</option>
+          <option value="Do Not Iron">Do Not Iron</option>
+          <option value="Iron Low Heat">Iron Low Heat</option>
+          <option value="Iron Medium Heat">Iron Medium Heat</option>
+          <option value="Iron High Heat">Iron High Heat</option>
+          <option value="Steam Iron">Steam Iron</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Special Care</label>
+        <input 
+          type="text" 
+          value={productForm.specialCare || ''}
+          onChange={(e) => setProductForm({...productForm, specialCare: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Any special care instructions"
+        />
+      </div>
+    </div>
+  </div>
+  
+  {/* Media Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Media</h4>
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Product Images *</label>
+        <p className="text-xs text-gray-500 mb-2">Min 3–5 images (Front, back, sides, close-up details, fabric texture)</p>
+        <div className="flex items-center space-x-4 mb-2">
+          <input 
+            type="file" 
+            id="product-images"
+            accept="image/*"
+            multiple
+            onChange={handleProductImageUpload}
+            className="hidden"
+            required
+          />
+          <label 
+            htmlFor="product-images"
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
+          >
+            <Upload size={16} className="mr-2" />
+            Upload Images
+          </label>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {productForm.images.map((image, idx) => (
+            <div key={idx} className="relative">
+              <img 
+                src={image} 
+                alt={`Product ${idx + 1}`}
+                className="w-full h-24 object-cover rounded border"
+              />
+              <button 
+                type="button"
+                onClick={() => removeProductImage(idx)}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Product Video Link</label>
+        <input 
+          type="url" 
+          value={productForm.videoLink}
+          onChange={(e) => setProductForm({...productForm, videoLink: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="https://example.com/video"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Instagram Video Link</label>
+        <input 
+          type="url" 
+          value={productForm.instagramLink}
+          onChange={(e) => setProductForm({...productForm, instagramLink: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="https://instagram.com/..."
+        />
+      </div>
+    </div>
+  </div>
+  
+  {/* Logistics Section */}
+  <div className="border-b pb-4">
+    <h4 className="text-md font-medium text-gray-900 mb-3">Logistics</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Delivery Availability</label>
+        <select 
+          value={productForm.deliveryAvailability}
+          onChange={(e) => setProductForm({...productForm, deliveryAvailability: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Option</option>
+          <option value="Pan India">Pan India</option>
+          <option value="Metro Cities">Metro Cities</option>
+          <option value="Select Cities">Select Cities</option>
+          <option value="International">International</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">COD Option</label>
+        <select 
+          value={productForm.codOption}
+          onChange={(e) => setProductForm({...productForm, codOption: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select Option</option>
+          <option value="Available">Available</option>
+          <option value="Not Available">Not Available</option>
+        </select>
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Seller Address</label>
+        <textarea 
+          value={productForm.sellerAddress}
+          onChange={(e) => setProductForm({...productForm, sellerAddress: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          placeholder="Enter seller address"
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Return Policy</label>
+        <textarea 
+          value={productForm.returnPolicy}
+          onChange={(e) => setProductForm({...productForm, returnPolicy: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={3}
+          placeholder="Enter return policy details"
+        />
+      </div>
+    </div>
+  </div>
+  
+  {/* Compliance Section */}
+  <div>
+    <h4 className="text-md font-medium text-gray-900 mb-3">Compliance</h4>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer Details *</label>
+        <textarea 
+          value={productForm.manufacturerDetails}
+          onChange={(e) => setProductForm({...productForm, manufacturerDetails: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          placeholder="Enter manufacturer or importer details"
+          required
+        />
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Packer Details *</label>
+        <textarea 
+          value={productForm.packerDetails}
+          onChange={(e) => setProductForm({...productForm, packerDetails: e.target.value})}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows={2}
+          placeholder="Enter packer details"
+          required
+        />
+      </div>
+    </div>
+  </div>
+  
+  <div className="flex justify-end space-x-3 pt-4">
+    <button 
+      type="button"
+      onClick={() => {
+        resetProductForm();
+        setActiveTab('products');
+      }}
+      className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+    >
+      Cancel
+    </button>
+    <button 
+      type="submit"
+      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+    >
+      {editingProduct ? 'Update Product' : 'Add Product'}
+    </button>
+  </div>
             </form>
           </div>
         );
@@ -8373,18 +9812,18 @@ function BrandOwnerDashboard({ user, onLogout }) {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Number</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhar Number</label>
                     <input 
                       type="text" 
                       value={kycData.aadhaar}
                       onChange={(e) => setKycData({...kycData, aadhaar: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter your Aadhaar number"
+                      placeholder="Enter your Aadhar number"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhaar Card Photo</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Aadhar Card Photo</label>
                     <div className="flex items-center space-x-4">
                       <input 
                         type="file" 
@@ -8600,799 +10039,1013 @@ function BrandOwnerDashboard({ user, onLogout }) {
             </div>
             
             <form onSubmit={handleProductSubmit} className="space-y-6">
-              {/* Basic Information Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Basic Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Accessory Name *</label>
-                    <input 
-                      type="text" 
-                      value={productForm.name}
-                      onChange={(e) => setProductForm({...productForm, name: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter accessory name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Brand Name</label>
-                    <input 
-                      type="text" 
-                      value={productForm.brandName}
-                      onChange={(e) => setProductForm({...productForm, brandName: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter brand name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                    <select 
-                      value={productForm.category}
-                      onChange={(e) => setProductForm({...productForm, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Bags">Bags</option>
-                      <option value="Belts">Belts</option>
-                      <option value="Hats">Hats</option>
-                      <option value="Scarves">Scarves</option>
-                      <option value="Gloves">Gloves</option>
-                      <option value="Jewelry">Jewelry</option>
-                      <option value="Sunglasses">Sunglasses</option>
-                      <option value="Watches">Watches</option>
-                      <option value="Wallets">Wallets</option>
-                      <option value="Ties">Ties</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Category</label>
-                    <input 
-                      type="text" 
-                      value={productForm.subCategory}
-                      onChange={(e) => setProductForm({...productForm, subCategory: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Handbags, Belts, Sunglasses"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Model/Style Code</label>
-                    <input 
-                      type="text" 
-                      value={productForm.sku}
-                      onChange={(e) => setProductForm({...productForm, sku: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter model or style code"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
-                    <select 
-                      value={productForm.gender || ''}
-                      onChange={(e) => setProductForm({...productForm, gender: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Men">Men</option>
-                      <option value="Women">Women</option>
-                      <option value="Unisex">Unisex</option>
-                      <option value="Kids">Kids</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Suitable Usage</label>
-                    <input 
-                      type="text" 
-                      value={productForm.occasion}
-                      onChange={(e) => setProductForm({...productForm, occasion: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Casual, Formal, Party, Travel"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">HSN Code</label>
-                    <input 
-                      type="text" 
-                      value={productForm.hsnCode}
-                      onChange={(e) => setProductForm({...productForm, hsnCode: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter HSN code"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Material Details Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Material Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Material</label>
-                    <input 
-                      type="text" 
-                      value={productForm.material}
-                      onChange={(e) => setProductForm({...productForm, material: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Leather, Canvas, Metal"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Material</label>
-                    <input 
-                      type="text" 
-                      value={productForm.secondaryMaterial || ''}
-                      onChange={(e) => setProductForm({...productForm, secondaryMaterial: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Polyester Lining, Brass Hardware"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Available Colors</label>
-                    <input 
-                      type="text" 
-                      value={productForm.colors}
-                      onChange={(e) => setProductForm({...productForm, colors: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Black, Brown, Silver"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Finish/Texture</label>
-                    <input 
-                      type="text" 
-                      value={productForm.finish || ''}
-                      onChange={(e) => setProductForm({...productForm, finish: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Matte, Glossy, Polished, Textured"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Accessory-Specific Details Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Accessory-Specific Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {productForm.category === 'Bags' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Bag Type</label>
-                        <select 
-                          value={productForm.bagType || ''}
-                          onChange={(e) => setProductForm({...productForm, bagType: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Bag Type</option>
-                          <option value="Handbag">Handbag</option>
-                          <option value="Backpack">Backpack</option>
-                          <option value="Clutch">Clutch</option>
-                          <option value="Tote">Tote</option>
-                          <option value="Crossbody">Crossbody</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Closure Type</label>
-                        <input 
-                          type="text" 
-                          value={productForm.closureType}
-                          onChange={(e) => setProductForm({...productForm, closureType: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g., Zipper, Magnetic, Button"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Compartments</label>
-                        <input 
-                          type="text" 
-                          value={productForm.compartments || ''}
-                          onChange={(e) => setProductForm({...productForm, compartments: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g., 1 main compartment, 2 side pockets"
-                        />
-                      </div>
-                    </>
-                  )}
-                  
-                  {productForm.category === 'Jewelry' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Metal Type</label>
-                        <select 
-                          value={productForm.metalType || ''}
-                          onChange={(e) => setProductForm({...productForm, metalType: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Metal Type</option>
-                          <option value="Gold">Gold</option>
-                          <option value="Silver">Silver</option>
-                          <option value="Platinum">Platinum</option>
-                          <option value="Stainless Steel">Stainless Steel</option>
-                          <option value="Brass">Brass</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Gemstone Type</label>
-                        <input 
-                          type="text" 
-                          value={productForm.gemstoneType || ''}
-                          onChange={(e) => setProductForm({...productForm, gemstoneType: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g., Diamond, Ruby, None"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Plating</label>
-                        <input 
-                          type="text" 
-                          value={productForm.plating || ''}
-                          onChange={(e) => setProductForm({...productForm, plating: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g., 18K Gold Plated, Rhodium Plated"
-                        />
-                      </div>
-                    </>
-                  )}
-                  
-                  {productForm.category === 'Watches' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Watch Type</label>
-                        <select 
-                          value={productForm.watchType || ''}
-                          onChange={(e) => setProductForm({...productForm, watchType: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Watch Type</option>
-                          <option value="Analog">Analog</option>
-                          <option value="Digital">Digital</option>
-                          <option value="Smartwatch">Smartwatch</option>
-                          <option value="Chronograph">Chronograph</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Band Material</label>
-                        <input 
-                          type="text" 
-                          value={productForm.bandMaterial || ''}
-                          onChange={(e) => setProductForm({...productForm, bandMaterial: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g., Leather, Stainless Steel, Silicone"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Water Resistance</label>
-                        <input 
-                          type="text" 
-                          value={productForm.waterResistance || ''}
-                          onChange={(e) => setProductForm({...productForm, waterResistance: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g., 30m, 50m, 100m"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* Size & Dimensions Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Size & Dimensions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions</label>
-                    <input 
-                      type="text" 
-                      value={productForm.dimensions || ''}
-                      onChange={(e) => setProductForm({...productForm, dimensions: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 30cm x 20cm x 5cm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Weight</label>
-                    <input 
-                      type="text" 
-                      value={productForm.weight}
-                      onChange={(e) => setProductForm({...productForm, weight: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 250g"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Adjustability</label>
-                    <select 
-                      value={productForm.adjustability || ''}
-                      onChange={(e) => setProductForm({...productForm, adjustability: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Option</option>
-                      <option value="Adjustable">Adjustable</option>
-                      <option value="Fixed">Fixed</option>
-                      <option value="One Size">One Size</option>
-                      <option value="Multiple Sizes">Multiple Sizes</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Size Options</label>
-                    <input 
-                      type="text" 
-                      value={productForm.sizes}
-                      onChange={(e) => setProductForm({...productForm, sizes: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., S, M, L, One Size"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Images Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Product Images</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Image *</label>
-                    <p className="text-xs text-gray-500 mb-2">Upload a clear image of the accessory</p>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <input 
-                        type="file" 
-                        id="primary-image"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setProductForm({
-                                ...productForm,
-                                images: productForm.images.length > 0 
-                                  ? [reader.result, ...productForm.images.slice(1)]
-                                  : [reader.result]
-                              });
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      <label 
-                        htmlFor="primary-image"
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Primary Image
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Additional Images</label>
-                    <p className="text-xs text-gray-500 mb-2">Upload images showing different angles, details, and usage</p>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <input 
-                        type="file" 
-                        id="additional-images"
-                        accept="image/*"
-                        multiple
-                        onChange={handleProductImageUpload}
-                        className="hidden"
-                      />
-                      <label 
-                        htmlFor="additional-images"
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Additional Images
-                      </label>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {productForm.images.map((image, idx) => (
-                        <div key={idx} className="relative">
-                          <img 
-                            src={image} 
-                            alt={`Accessory ${idx + 1}`}
-                            className="w-full h-24 object-cover rounded border"
-                          />
-                          <button 
-                            type="button"
-                            onClick={() => removeProductImage(idx)}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Video Links Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Video Links</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Video Link</label>
-                    <input 
-                      type="url" 
-                      value={productForm.videoLink}
-                      onChange={(e) => setProductForm({...productForm, videoLink: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://example.com/video"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Instagram Video Link</label>
-                    <input 
-                      type="url" 
-                      value={productForm.instagramLink}
-                      onChange={(e) => setProductForm({...productForm, instagramLink: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="https://instagram.com/..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Return Policy Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Return Policy</h4>
-                <div>
-                  <textarea 
-                    value={productForm.returnPolicy}
-                    onChange={(e) => setProductForm({...productForm, returnPolicy: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                    placeholder="Enter return policy details"
-                  />
-                </div>
-              </div>
-
-              {/* Seller Information Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Seller Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Seller Address</label>
-                    <textarea 
-                      value={productForm.sellerAddress}
-                      onChange={(e) => setProductForm({...productForm, sellerAddress: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Enter seller address"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer / Importer Details</label>
-                    <textarea 
-                      value={productForm.manufacturerDetails}
-                      onChange={(e) => setProductForm({...productForm, manufacturerDetails: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Enter manufacturer or importer details"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Pricing & Inventory Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Pricing & Inventory</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Selling Price (₹) *</label>
-                    <input 
-                      type="number" 
-                      value={productForm.price}
-                      onChange={(e) => {
-                        const price = e.target.value;
-                        const credits = price && !isNaN(price) && parseFloat(price) > 0 
-                          ? (parseFloat(price) / 100).toFixed(2) 
-                          : '';
-                        setProductForm({
-                          ...productForm, 
-                          price: price,
-                          credits: credits
-                        });
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter selling price"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Credits</label>
-                    <div className="flex items-center">
-                      <input 
-                        type="text" 
-                        value={productForm.credits ? `${productForm.credits} Credits` : ''}
-                        readOnly
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700"
-                        placeholder="Credits will be calculated automatically"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">MRP (₹)</label>
-                    <input 
-                      type="number" 
-                      value={productForm.mrp || ''}
-                      onChange={(e) => setProductForm({...productForm, mrp: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter maximum retail price"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Discount</label>
-                    <input 
-                      type="text" 
-                      value={productForm.offer}
-                      onChange={(e) => setProductForm({...productForm, offer: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 20% OFF"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity</label>
-                    <input 
-                      type="number" 
-                      value={productForm.stockQuantity}
-                      onChange={(e) => setProductForm({...productForm, stockQuantity: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter stock quantity"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">SKU Code</label>
-                    <input 
-                      type="text" 
-                      value={productForm.sku}
-                      onChange={(e) => setProductForm({...productForm, sku: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter SKU code"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Description Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Description</h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
-                    <textarea 
-                      value={productForm.shortDescription}
-                      onChange={(e) => setProductForm({...productForm, shortDescription: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Brief description of the accessory"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Description</label>
-                    <textarea 
-                      value={productForm.fullDescription}
-                      onChange={(e) => setProductForm({...productForm, fullDescription: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={4}
-                      placeholder="Detailed description of the accessory"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Key Features</label>
-                    <textarea 
-                      value={productForm.keyFeatures}
-                      onChange={(e) => setProductForm({...productForm, keyFeatures: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                      placeholder="List key features of the accessory"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Authenticity & Warranty Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Authenticity & Warranty</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Authenticity Certificate</label>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <input 
-                        type="file" 
-                        id="auth-certificate"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setProductForm({...productForm, authCertificate: reader.result});
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="hidden"
-                      />
-                      <label 
-                        htmlFor="auth-certificate"
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
-                      >
-                        <Upload size={16} className="mr-2" />
-                        Upload Certificate
-                      </label>
-                    </div>
-                    {productForm.authCertificate && (
-                      <div className="flex items-center">
-                        <span className="text-sm text-green-600">Certificate uploaded</span>
-                        <button 
-                          type="button"
-                          onClick={() => setProductForm({...productForm, authCertificate: null})}
-                          className="ml-2 text-red-500 hover:text-red-700"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Warranty Details</label>
-                    <textarea 
-                      value={productForm.warranty || ''}
-                      onChange={(e) => setProductForm({...productForm, warranty: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={2}
-                      placeholder="Enter warranty details"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Care Instructions Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Care Instructions</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Cleaning Method</label>
-                    <input 
-                      type="text" 
-                      value={productForm.washMethod}
-                      onChange={(e) => setProductForm({...productForm, washMethod: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Dry clean only, Wipe with damp cloth"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Storage Instructions</label>
-                    <input 
-                      type="text" 
-                      value={productForm.storage || ''}
-                      onChange={(e) => setProductForm({...productForm, storage: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., Keep in dust bag, Store in dry place"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Logistics Section */}
-              <div className="border-b pb-4">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Logistics</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Package Weight</label>
-                    <input 
-                      type="text" 
-                      value={productForm.packageWeight || ''}
-                      onChange={(e) => setProductForm({...productForm, packageWeight: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 300g"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Package Dimensions</label>
-                    <input 
-                      type="text" 
-                      value={productForm.packageDimensions}
-                      onChange={(e) => setProductForm({...productForm, packageDimensions: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., 25x15x5 cm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Packaging Type</label>
-                    <select 
-                      value={productForm.packagingType || ''}
-                      onChange={(e) => setProductForm({...productForm, packagingType: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Packaging Type</option>
-                      <option value="Box">Box</option>
-                      <option value="Pouch">Pouch</option>
-                      <option value="Dust Bag">Dust Bag</option>
-                      <option value="Gift Box">Gift Box</option>
-                      <option value="Polybag">Polybag</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">COD Option</label>
-                    <select 
-                      value={productForm.codOption}
-                      onChange={(e) => setProductForm({...productForm, codOption: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Option</option>
-                      <option value="Available">Available</option>
-                      <option value="Not Available">Not Available</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Additional Information Section */}
-              <div>
-                <h4 className="text-md font-medium text-gray-900 mb-3">Additional Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Country of Origin</label>
-                    <input 
-                      type="text" 
-                      value={productForm.countryOfOrigin}
-                      onChange={(e) => setProductForm({...productForm, countryOfOrigin: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., India"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">GST Percentage</label>
-                    <select 
-                      value={productForm.gstPercentage}
-                      onChange={(e) => setProductForm({...productForm, gstPercentage: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select GST</option>
-                      <option value="0%">0%</option>
-                      <option value="5%">5%</option>
-                      <option value="12%">12%</option>
-                      <option value="18%">18%</option>
-                      <option value="28%">28%</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Product Tags</label>
-                    <input 
-                      type="text" 
-                      value={productForm.tags || ''}
-                      onChange={(e) => setProductForm({...productForm, tags: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="e.g., leather, handcrafted, formal, gift"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
+        {/* Basic Information Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Basic Information</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Accessory Name *</label>
+              <input 
+                type="text" 
+                value={productForm.name}
+                onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter accessory name"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Brand Name *</label>
+              <input 
+                type="text" 
+                value={productForm.brandName}
+                onChange={(e) => setProductForm({...productForm, brandName: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter brand name"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+              <select 
+                value={productForm.category}
+                onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select Category</option>
+                <option value="Bags">Bags</option>
+                <option value="Belts">Belts</option>
+                <option value="Hats">Hats</option>
+                <option value="Scarves">Scarves</option>
+                <option value="Gloves">Gloves</option>
+                <option value="Jewelry">Jewelry</option>
+                <option value="Sunglasses">Sunglasses</option>
+                <option value="Watches">Watches</option>
+                <option value="Wallets">Wallets</option>
+                <option value="Ties">Ties</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Sub-Category</label>
+              <input 
+                type="text" 
+                value={productForm.subCategory}
+                onChange={(e) => setProductForm({...productForm, subCategory: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Handbags, Belts, Sunglasses"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Model/Style Code</label>
+              <input 
+                type="text" 
+                value={productForm.sku}
+                onChange={(e) => setProductForm({...productForm, sku: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter model or style code"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+              <select 
+                value={productForm.gender || ''}
+                onChange={(e) => setProductForm({...productForm, gender: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Gender</option>
+                <option value="Men">Men</option>
+                <option value="Women">Women</option>
+                <option value="Unisex">Unisex</option>
+                <option value="Kids">Kids</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Suitable Usage</label>
+              <input 
+                type="text" 
+                value={productForm.occasion}
+                onChange={(e) => setProductForm({...productForm, occasion: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Casual, Formal, Party, Travel"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">HSN Code *</label>
+              <input 
+                type="text" 
+                value={productForm.hsnCode}
+                onChange={(e) => setProductForm({...productForm, hsnCode: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter HSN code"
+                required
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Material Details Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Material Details</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Primary Material *</label>
+              <input 
+                type="text" 
+                value={productForm.material}
+                onChange={(e) => setProductForm({...productForm, material: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Leather, Canvas, Metal"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Secondary Material</label>
+              <input 
+                type="text" 
+                value={productForm.secondaryMaterial || ''}
+                onChange={(e) => setProductForm({...productForm, secondaryMaterial: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Polyester Lining, Brass Hardware"
+              />
+            </div>
+            
+            {/* Color Availability - Updated for SKU Generation */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Available Colors *</label>
+              <div className="flex items-center space-x-2 mb-2">
+                <input 
+                  type="text" 
+                  value={productForm.colorInput || ''}
+                  onChange={(e) => setProductForm({...productForm, colorInput: e.target.value})}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter color name"
+                />
                 <button 
                   type="button"
                   onClick={() => {
-                    resetProductForm();
-                    setActiveTab('products');
+                    if (productForm.colorInput && productForm.colorInput.trim()) {
+                      const colors = productForm.colors ? productForm.colors.split(', ') : [];
+                      if (!colors.includes(productForm.colorInput.trim())) {
+                        setProductForm({
+                          ...productForm, 
+                          colors: [...colors, productForm.colorInput.trim()].join(', '),
+                          colorInput: ''
+                        });
+                      }
+                    }
                   }}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  {editingProduct ? 'Update Accessory' : 'Add Accessory'}
+                  Add
                 </button>
               </div>
-            </form>
+              <div className="flex flex-wrap gap-2">
+                {(productForm.colors ? productForm.colors.split(', ') : []).map((color, index) => (
+                  <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                    <span className="text-sm">{color}</span>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const colors = productForm.colors.split(', ');
+                        colors.splice(index, 1);
+                        setProductForm({...productForm, colors: colors.join(', ')});
+                      }}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Finish/Texture</label>
+              <input 
+                type="text" 
+                value={productForm.finish || ''}
+                onChange={(e) => setProductForm({...productForm, finish: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Matte, Glossy, Polished, Textured"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Accessory-Specific Details Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Accessory-Specific Details</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {productForm.category === 'Bags' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Bag Type</label>
+                  <select 
+                    value={productForm.bagType || ''}
+                    onChange={(e) => setProductForm({...productForm, bagType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Bag Type</option>
+                    <option value="Handbag">Handbag</option>
+                    <option value="Backpack">Backpack</option>
+                    <option value="Clutch">Clutch</option>
+                    <option value="Tote">Tote</option>
+                    <option value="Crossbody">Crossbody</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Closure Type</label>
+                  <input 
+                    type="text" 
+                    value={productForm.closureType}
+                    onChange={(e) => setProductForm({...productForm, closureType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Zipper, Magnetic, Button"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Compartments</label>
+                  <input 
+                    type="text" 
+                    value={productForm.compartments || ''}
+                    onChange={(e) => setProductForm({...productForm, compartments: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 1 main compartment, 2 side pockets"
+                  />
+                </div>
+              </>
+            )}
+            
+            {productForm.category === 'Jewelry' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Metal Type</label>
+                  <select 
+                    value={productForm.metalType || ''}
+                    onChange={(e) => setProductForm({...productForm, metalType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Metal Type</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Platinum">Platinum</option>
+                    <option value="Stainless Steel">Stainless Steel</option>
+                    <option value="Brass">Brass</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Gemstone Type</label>
+                  <input 
+                    type="text" 
+                    value={productForm.gemstoneType || ''}
+                    onChange={(e) => setProductForm({...productForm, gemstoneType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Diamond, Ruby, None"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Plating</label>
+                  <input 
+                    type="text" 
+                    value={productForm.plating || ''}
+                    onChange={(e) => setProductForm({...productForm, plating: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 18K Gold Plated, Rhodium Plated"
+                  />
+                </div>
+              </>
+            )}
+            
+            {productForm.category === 'Watches' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Watch Type</label>
+                  <select 
+                    value={productForm.watchType || ''}
+                    onChange={(e) => setProductForm({...productForm, watchType: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Watch Type</option>
+                    <option value="Analog">Analog</option>
+                    <option value="Digital">Digital</option>
+                    <option value="Smartwatch">Smartwatch</option>
+                    <option value="Chronograph">Chronograph</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Band Material</label>
+                  <input 
+                    type="text" 
+                    value={productForm.bandMaterial || ''}
+                    onChange={(e) => setProductForm({...productForm, bandMaterial: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Leather, Stainless Steel, Silicone"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Water Resistance</label>
+                  <input 
+                    type="text" 
+                    value={productForm.waterResistance || ''}
+                    onChange={(e) => setProductForm({...productForm, waterResistance: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., 30m, 50m, 100m"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Size & Dimensions Section - Updated for SKU Generation */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Size & Dimensions</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Dimensions *</label>
+              <input 
+                type="text" 
+                value={productForm.dimensions || ''}
+                onChange={(e) => setProductForm({...productForm, dimensions: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 30cm x 20cm x 5cm"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Weight *</label>
+              <input 
+                type="text" 
+                value={productForm.weight}
+                onChange={(e) => setProductForm({...productForm, weight: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 250g"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Adjustability</label>
+              <select 
+                value={productForm.adjustability || ''}
+                onChange={(e) => setProductForm({...productForm, adjustability: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Option</option>
+                <option value="Adjustable">Adjustable</option>
+                <option value="Fixed">Fixed</option>
+                <option value="One Size">One Size</option>
+                <option value="Multiple Sizes">Multiple Sizes</option>
+              </select>
+            </div>
+            
+            {/* Size Options - Updated for SKU Generation */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Size Options *</label>
+              <div className="flex items-center space-x-2 mb-2">
+                <input 
+                  type="text" 
+                  value={productForm.sizeInput || ''}
+                  onChange={(e) => setProductForm({...productForm, sizeInput: e.target.value})}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter size (e.g., S, M, L, One Size)"
+                />
+                <button 
+                  type="button"
+                  onClick={() => {
+                    if (productForm.sizeInput && productForm.sizeInput.trim()) {
+                      const sizes = productForm.sizes ? productForm.sizes.split(', ') : [];
+                      if (!sizes.includes(productForm.sizeInput.trim())) {
+                        setProductForm({
+                          ...productForm, 
+                          sizes: [...sizes, productForm.sizeInput.trim()].join(', '),
+                          sizeInput: ''
+                        });
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(productForm.sizes ? productForm.sizes.split(', ') : []).map((size, index) => (
+                  <div key={index} className="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                    <span className="text-sm">{size}</span>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const sizes = productForm.sizes.split(', ');
+                        sizes.splice(index, 1);
+                        setProductForm({...productForm, sizes: sizes.join(', ')});
+                      }}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* SKU Code Generation Section - New Addition */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">SKU Code Generation</h4>
+          {/* Generate SKU Codes Button */}
+          <button 
+            type="button"
+            onClick={() => {
+              // Generate SKU codes based on size and color combinations
+              if (productForm.sizes && productForm.colors) {
+                const sizes = productForm.sizes.split(', ');
+                const colors = productForm.colors.split(', ');
+                const brandPrefix = productForm.brandName ? productForm.brandName.substring(0, 3).toUpperCase() : 'BRD';
+                const categoryPrefix = productForm.category ? productForm.category.substring(0, 3).toUpperCase() : 'ACC';
+                
+                const skuCodes = [];
+                sizes.forEach(size => {
+                  colors.forEach(color => {
+                    const colorCode = color.substring(0, 3).toUpperCase();
+                    const sizeCode = size.toUpperCase();
+                    const skuCode = `${brandPrefix}-${categoryPrefix}-${colorCode}-${sizeCode}`;
+                    skuCodes.push({
+                      size: size,
+                      color: color,
+                      sku: skuCode
+                    });
+                  });
+                });
+                
+                setProductForm({
+                  ...productForm,
+                  skuCodes: skuCodes
+                });
+              }
+            }}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 mb-3"
+          >
+            Generate SKU Codes
+          </button>
+          
+          {/* Display SKU Codes Table */}
+          {productForm.skuCodes && productForm.skuCodes.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Size
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Color
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      SKU Code
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {productForm.skuCodes.map((sku, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {sku.size}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {sku.color}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {sku.sku}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        
+        {/* Images Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Product Images</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Primary Image *</label>
+              <p className="text-xs text-gray-500 mb-2">Upload a clear image of the accessory</p>
+              <div className="flex items-center space-x-4 mb-2">
+                <input 
+                  type="file" 
+                  id="primary-image"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setProductForm({
+                          ...productForm,
+                          images: productForm.images.length > 0 
+                            ? [reader.result, ...productForm.images.slice(1)]
+                            : [reader.result]
+                        });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <label 
+                  htmlFor="primary-image"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
+                >
+                  <Upload size={16} className="mr-2" />
+                  Upload Primary Image
+                </label>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Additional Images</label>
+              <p className="text-xs text-gray-500 mb-2">Upload images showing different angles, details, and usage</p>
+              <div className="flex items-center space-x-4 mb-2">
+                <input 
+                  type="file" 
+                  id="additional-images"
+                  accept="image/*"
+                  multiple
+                  onChange={handleProductImageUpload}
+                  className="hidden"
+                />
+                <label 
+                  htmlFor="additional-images"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
+                >
+                  <Upload size={16} className="mr-2" />
+                  Upload Additional Images
+                </label>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {productForm.images.map((image, idx) => (
+                  <div key={idx} className="relative">
+                    <img 
+                      src={image} 
+                      alt={`Accessory ${idx + 1}`}
+                      className="w-full h-24 object-cover rounded border"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => removeProductImage(idx)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {productForm.images && productForm.images.length < 3 && (
+                <p className="text-xs text-red-500 mt-2">Please upload at least 3 images</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Video Links Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Video Links</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Video Link</label>
+              <input 
+                type="url" 
+                value={productForm.videoLink}
+                onChange={(e) => setProductForm({...productForm, videoLink: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://example.com/video"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Instagram Video Link</label>
+              <input 
+                type="url" 
+                value={productForm.instagramLink}
+                onChange={(e) => setProductForm({...productForm, instagramLink: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://instagram.com/..."
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Return Policy Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Return Policy</h4>
+          <div>
+            <textarea 
+              value={productForm.returnPolicy}
+              onChange={(e) => setProductForm({...productForm, returnPolicy: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              placeholder="Enter return policy details"
+            />
+          </div>
+        </div>
+
+        {/* Seller Information Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Seller Information</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Seller Address *</label>
+              <textarea 
+                value={productForm.sellerAddress}
+                onChange={(e) => setProductForm({...productForm, sellerAddress: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Enter seller address"
+                required
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer / Importer Details *</label>
+              <textarea 
+                value={productForm.manufacturerDetails}
+                onChange={(e) => setProductForm({...productForm, manufacturerDetails: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Enter manufacturer or importer details"
+                required
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Packer Details *</label>
+              <textarea 
+                value={productForm.packerDetails}
+                onChange={(e) => setProductForm({...productForm, packerDetails: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Enter packer details"
+                required
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Pricing & Inventory Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Pricing & Inventory</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product MRP (₹) *</label>
+              <input 
+                type="number" 
+                value={productForm.mrp}
+                onChange={(e) => {
+                  setProductForm({
+                    ...productForm, 
+                    mrp: e.target.value
+                  });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter MRP"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Selling Price (₹) *</label>
+              <input 
+                type="number" 
+                value={productForm.price}
+                onChange={(e) => {
+                  const sellingPrice = e.target.value;
+                  const gstRate = productForm.gstRate || 0;
+                  const gstInclusivePrice = sellingPrice && !isNaN(sellingPrice) && parseFloat(sellingPrice) > 0 
+                    ? (parseFloat(sellingPrice) * (1 + parseFloat(gstRate) / 100)).toFixed(2) 
+                    : '';
+                  const credits = sellingPrice && !isNaN(sellingPrice) && parseFloat(sellingPrice) > 0 
+                    ? (parseFloat(sellingPrice) / 100).toFixed(2) 
+                    : '';
+                  setProductForm({
+                    ...productForm, 
+                    price: sellingPrice,
+                    gstInclusivePrice: gstInclusivePrice,
+                    credits: credits
+                  });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter selling price"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">GST Inclusive Price (₹) *</label>
+              <div className="flex items-center">
+                <input 
+                  type="text" 
+                  value={productForm.gstInclusivePrice || ''}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700"
+                  placeholder="Auto-generated based on selling price and GST rate"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">GST Percentage</label>
+              <select 
+                value={productForm.gstPercentage}
+                onChange={(e) => setProductForm({...productForm, gstPercentage: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select GST</option>
+                <option value="0%">0%</option>
+                <option value="5%">5%</option>
+                <option value="12%">12%</option>
+                <option value="18%">18%</option>
+                <option value="28%">28%</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Credits</label>
+              <div className="flex items-center">
+                <input 
+                  type="text" 
+                  value={productForm.credits ? `${productForm.credits} Credits` : ''}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-700"
+                  placeholder="Credits will be calculated automatically"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Discount</label>
+              <input 
+                type="text" 
+                value={productForm.offer}
+                onChange={(e) => setProductForm({...productForm, offer: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 20% OFF"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
+              <input 
+                type="number" 
+                value={productForm.stockQuantity}
+                onChange={(e) => setProductForm({...productForm, stockQuantity: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter stock quantity"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Warehouse / Pickup Location *</label>
+              <textarea 
+                value={productForm.warehouseLocation}
+                onChange={(e) => setProductForm({...productForm, warehouseLocation: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter warehouse location"
+                required
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Description Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Description</h4>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Description *</label>
+              <textarea 
+                value={productForm.description}
+                onChange={(e) => setProductForm({...productForm, description: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                placeholder="Enter product description"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Short Description</label>
+              <textarea 
+                value={productForm.shortDescription}
+                onChange={(e) => setProductForm({...productForm, shortDescription: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Brief description of the accessory"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Full Description</label>
+              <textarea 
+                value={productForm.fullDescription}
+                onChange={(e) => setProductForm({...productForm, fullDescription: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+                placeholder="Detailed description of the accessory"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Key Features</label>
+              <textarea 
+                value={productForm.keyFeatures}
+                onChange={(e) => setProductForm({...productForm, keyFeatures: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                placeholder="List key features of the accessory"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Authenticity & Warranty Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Authenticity & Warranty</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Authenticity Certificate</label>
+              <div className="flex items-center space-x-4 mb-2">
+                <input 
+                  type="file" 
+                  id="auth-certificate"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setProductForm({...productForm, authCertificate: reader.result});
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <label 
+                  htmlFor="auth-certificate"
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 cursor-pointer flex items-center"
+                >
+                  <Upload size={16} className="mr-2" />
+                  Upload Certificate
+                </label>
+              </div>
+              {productForm.authCertificate && (
+                <div className="flex items-center">
+                  <span className="text-sm text-green-600">Certificate uploaded</span>
+                  <button 
+                    type="button"
+                    onClick={() => setProductForm({...productForm, authCertificate: null})}
+                    className="ml-2 text-red-500 hover:text-red-700"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Warranty Details</label>
+              <textarea 
+                value={productForm.warranty || ''}
+                onChange={(e) => setProductForm({...productForm, warranty: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={2}
+                placeholder="Enter warranty details"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Care Instructions Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Care Instructions</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cleaning Method *</label>
+              <input 
+                type="text" 
+                value={productForm.washMethod}
+                onChange={(e) => setProductForm({...productForm, washMethod: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Dry clean only, Wipe with damp cloth"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Storage Instructions</label>
+              <input 
+                type="text" 
+                value={productForm.storage || ''}
+                onChange={(e) => setProductForm({...productForm, storage: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., Keep in dust bag, Store in dry place"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Logistics Section */}
+        <div className="border-b pb-4">
+          <h4 className="text-md font-medium text-gray-900 mb-3">Logistics</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Package Weight</label>
+              <input 
+                type="text" 
+                value={productForm.packageWeight || ''}
+                onChange={(e) => setProductForm({...productForm, packageWeight: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 300g"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Package Dimensions</label>
+              <input 
+                type="text" 
+                value={productForm.packageDimensions}
+                onChange={(e) => setProductForm({...productForm, packageDimensions: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., 25x15x5 cm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Packaging Type</label>
+              <select 
+                value={productForm.packagingType || ''}
+                onChange={(e) => setProductForm({...productForm, packagingType: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Packaging Type</option>
+                <option value="Box">Box</option>
+                <option value="Pouch">Pouch</option>
+                <option value="Dust Bag">Dust Bag</option>
+                <option value="Gift Box">Gift Box</option>
+                <option value="Polybag">Polybag</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">COD Option</label>
+              <select 
+                value={productForm.codOption}
+                onChange={(e) => setProductForm({...productForm, codOption: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Option</option>
+                <option value="Available">Available</option>
+                <option value="Not Available">Not Available</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Information Section */}
+        <div>
+          <h4 className="text-md font-medium text-gray-900 mb-3">Additional Information</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Country of Origin *</label>
+              <input 
+                type="text" 
+                value={productForm.countryOfOrigin}
+                onChange={(e) => setProductForm({...productForm, countryOfOrigin: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., India"
+                required
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Product Tags</label>
+              <input 
+                type="text" 
+                value={productForm.tags || ''}
+                onChange={(e) => setProductForm({...productForm, tags: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g., leather, handcrafted, formal, gift"
+              />
+              <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-3 pt-4">
+          <button 
+            type="button"
+            onClick={() => {
+              resetProductForm();
+              setActiveTab('products');
+            }}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            {editingProduct ? 'Update Accessory' : 'Add Accessory'}
+          </button>
+        </div>
+      </form>
           </div>
         ); 
         
@@ -11034,144 +12687,6 @@ function ForgotPassword({ onBackToLogin }) {
         </p>
       </div>
     </div>
-  );
-}
-
-// Icon components
-function ChevronDown({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="6 9 12 15 18 9"></polyline>
-    </svg>
-  );
-}
-
-function ChevronUp({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="18 15 12 9 6 15"></polyline>
-    </svg>
-  );
-}
-
-function ChevronRight({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-  );
-}
-
-function Check({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-  );
-}
-
-function Copy({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-    </svg>
-  );
-}
-
-function X({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  );
-}
-
-function Menu({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="3" y1="12" x2="21" y2="12"></line>
-      <line x1="3" y1="6" x2="21" y2="6"></line>
-      <line x1="3" y1="18" x2="21" y2="18"></line>
-    </svg>
-  );
-}
-
-function Plus({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-  );
-}
-
-function Edit({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-    </svg>
-  );
-}
-
-function Trash2({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      <line x1="10" y1="11" x2="10" y2="17"></line>
-      <line x1="14" y1="11" x2="14" y2="17"></line>
-    </svg>
-  );
-}
-
-function Upload({ size }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-      <polyline points="17 8 12 3 7 8"></polyline>
-      <line x1="12" y1="3" x2="12" y2="15"></line>
-    </svg>
-  );
-}
-
-function User({ size = 24, className }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  );
-}
-
-function Search({ size = 24, className }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="11" cy="11" r="8"></circle>
-      <path d="m21 21-4.35-4.35"></path>
-    </svg>
   );
 }
 

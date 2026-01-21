@@ -1989,113 +1989,137 @@ const ShoppingCartPage = ({ setCurrentPage }) => {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Cart Items */}
             <div className="md:col-span-2">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">Cart Items ({cartItems.length})</h2>
-              
-              <div className="space-y-4">
-                {cartItems.map((item) => {
-                  const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
-                  const inclusiveOriginalPrice = calculateGSTInclusivePrice(item.originalPrice, item.category);
-                  const discountPercentage = Math.round((1 - inclusivePrice / inclusiveOriginalPrice) * 100);
-                  
-                  return (
-                    <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <div className="flex flex-col md:flex-row gap-4">
-                        <img 
-                          src={item.images[0]} 
-                          alt={item.name} 
-                          className="w-full md:w-24 h-32 object-cover rounded"
-                        />
-                        
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{item.name}</h3>
-                          <p className="text-sm text-gray-500">{item.brand}</p>
-                          
-                          <div className="flex flex-wrap gap-2 mb-1">
-                            <span className="text-sm bg-gray-100 px-2 py-1 rounded">Size: {item.selectedSize}</span>
-                            <span className="text-sm bg-gray-100 px-2 py-1 rounded">Color: {item.selectedColor}</span>
-                          </div>
-                          
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center">
-                              <span className="font-bold text-lg">₹{inclusivePrice}</span>
-                              {item.originalPrice > item.price && (
-                                <span className="text-sm text-gray-500 line-through ml-2">₹{inclusiveOriginalPrice}</span>
-                              )}
-                              {item.originalPrice > item.price && (
-                                <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-bold">
-                                  {discountPercentage}% OFF
-                                </span>
-                              )}
-                              <span className="text-xs text-gray-500 ml-2">(Inclusive of all taxes)</span>
-                            </div>
-                            
-                            <div className="flex items-center border border-gray-300 rounded">
-                              <button 
-                               onClick={() => updateQuantity(item.id, item.selectedSize, item.selectedColor, item.quantity - 1)}
-                               className="px-3 py-4 hover:bg-red-100 transition-colors duration-200 flex items-center justify-center disabled:opacity-40"
-                              >
-                              <Minus size={16} />
-                              </button>
-                              <span className="px-4 py-2 min-w-[10px] text-center font-medium">
-                               {item.quantity}
-                              </span>
-                              <button 
-                               onClick={() => updateQuantity(item.id, item.selectedSize, item.selectedColor, item.quantity + 1)}
-                               className="px-3 py-4 hover:bg-green-100 transition-colors duration-200 flex items-center justify-center disabled:opacity-40"
-                              >
-                              <PlusIcon size={16} />
-                             </button>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => handleRemoveClick(item)}
-                              className="px-3 py-1 border border-red-300 text-red-600 text-sm rounded hover:bg-red-50 transition-colors font-semibold"
-                            >
-                              Remove
-                            </button>
-                            <button 
-                              onClick={() => moveToWishlist(item.id, item.selectedSize, item.selectedColor)}
-                              className="px-3 py-1 border border-blue-300 text-blue-600 text-sm rounded hover:bg-blue-50 transition-colors font-semibold"
-                            >
-                              Move to Wishlist
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+  <h2 className="text-xl font-bold text-gray-800 mb-6">Cart Items ({cartItems.length})</h2>
+  <div className="space-y-4">
+    {cartItems.map((item) => {
+      const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
+      const inclusiveOriginalPrice = calculateGSTInclusivePrice(item.originalPrice, item.category);
+      const discountPercentage = Math.round((1 - inclusivePrice / inclusiveOriginalPrice) * 100);
+      const itemCredits = (inclusivePrice / 10).toFixed(2);
+      
+      return (
+        <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+          <div className="flex flex-col md:flex-row gap-4">
+            <img 
+              src={item.images[0]} 
+              alt={item.name} 
+              className="w-full md:w-24 h-32 object-cover rounded"
+            />
+            <div className="flex-1">
+              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <p className="text-sm text-gray-500">{item.brand}</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  Size: {item.selectedSize}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  Color: {item.selectedColor}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  Qty: {item.quantity}
+                </span>
               </div>
               
-              {/* Order Summary */}
-              <div className="mt-8 bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Order Summary</h3>
-                
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total MRP (Inclusive of all taxes)</span>
-                    <span className="font-semibold">₹{calculateGSTInclusiveTotal()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Discount</span>
-                    <span className="font-semibold text-green-600">-₹{calculateGSTInclusiveDiscount()}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span>Total</span>
-                    <span>₹{calculateGSTInclusiveTotal()}</span>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="font-bold text-lg">₹{inclusivePrice}</span>
+                  {item.originalPrice > item.price && (
+                    <span className="text-sm text-gray-500 line-through ml-2">₹{inclusiveOriginalPrice}</span>
+                  )}
+                  {item.originalPrice > item.price && (
+                    <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-bold">
+                      {discountPercentage}% OFF
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 text-white ml-1 shadow-lg">
+                    {itemCredits * item.quantity} Credits
+                  </span>
                 </div>
                 
+                <div className="flex items-center border border-gray-300 rounded">
+                  <button 
+                    onClick={() => updateQuantity(item.id, item.selectedSize, item.selectedColor, item.quantity - 1)}
+                    className="px-3 py-4 hover:bg-red-100 transition-colors duration-200 flex items-center justify-center disabled:opacity-40"
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span className="px-4 py-2 min-w-[10px] text-center font-medium">
+                    {item.quantity}
+                  </span>
+                  <button 
+                    onClick={() => updateQuantity(item.id, item.selectedSize, item.selectedColor, item.quantity + 1)}
+                    className="px-3 py-4 hover:bg-green-100 transition-colors duration-200 flex items-center justify-center disabled:opacity-40"
+                  >
+                    <PlusIcon size={16} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
                 <button 
-                  onClick={() => setCurrentPage('checkout')}
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                  onClick={() => handleRemoveClick(item)}
+                  className="px-3 py-1 border border-red-300 text-red-600 text-sm rounded hover:bg-red-50 transition-colors font-semibold"
                 >
-                  Proceed to Checkout
+                  Remove
+                </button>
+                <button 
+                  onClick={() => moveToWishlist(item.id, item.selectedSize, item.selectedColor)}
+                  className="px-3 py-1 border border-blue-300 text-blue-600 text-sm rounded hover:bg-blue-50 transition-colors font-semibold"
+                >
+                  Move to Wishlist
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+  
+  {/* Order Summary */}
+  <div className="mt-8 bg-gray-50 rounded-lg p-6">
+    <h3 className="text-lg font-bold text-gray-800 mb-4">Order Summary</h3>
+    
+    <div className="space-y-2 mb-4">
+      <div className="flex justify-between">
+        <span className="text-gray-600">Total MRP (Inclusive of all taxes)</span>
+        <div className="flex items-center">
+          <span className="font-semibold">₹{calculateGSTInclusiveTotal()}</span>
+          
+        </div>
+      </div>
+      <div className="flex justify-between">
+        <span className="text-gray-600">Discount</span>
+        <div className="flex items-center">
+          <span className="font-semibold text-green-600">-₹{calculateGSTInclusiveDiscount()}</span>
+         
+        </div>
+      </div>
+      <div className="flex justify-between text-lg font-bold pt-2 border-t">
+        <span>Total</span>
+        <div className="flex items-center">
+          <span>₹{calculateGSTInclusiveTotal()}</span>
+        </div>
+      </div>
+    </div>
+    
+    <button 
+      onClick={() => setCurrentPage('checkout')}
+      className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+    >
+      Proceed to Checkout
+    </button>
+  </div>
+</div>
             
             {/* Right Sidebar - Could be empty or have recommendations */}
             <div>
@@ -2357,320 +2381,342 @@ const CheckoutPage = ({ setCurrentPage }) => {
       </div>
       
       <div className="max-w-8xl mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Cart Summary */}
-          <div className="md:col-span-2">
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
-              <h2 className="text-lg font-bold text-gray-800 mb-4">Cart Summary</h2>
-              
-              <div className="space-y-4 mb-6">
-                {cartItems.map((item) => {
-                  const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
-                  
-                  return (
-                    <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4 pb-4 border-b">
-                      <img 
-                        src={item.images[0]} 
-                        alt={item.name} 
-                        className="w-16 h-20 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-gray-500 mb-1">
-                          Size: {item.selectedSize}, Color: {item.selectedColor}, Qty: {item.quantity}
-                        </p>
-                        <div className="flex items-center mb-4">
-                          <span className="font-semibold">₹{inclusivePrice * item.quantity}</span>
-                          <span className="text-xs text-gray-500 ml-1 font-semibold">({item.credits * item.quantity} Credits)</span>
-                          <span className="text-xs text-gray-500 ml-2">(Inclusive of all taxes)</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              
-              <div className="space-y-2 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total MRP (Inclusive of all taxes)</span>
-                  <span className="font-semibold">₹{calculateGSTInclusiveTotal()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Discount</span>
-                  <span className="font-semibold text-green-600">-₹{calculateGSTInclusiveDiscount()}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                  <div className="flex items-baseline">
-                    <span>Total</span>
-                    <span className="text-sm text-gray-500 ml-1">({calculateTotalCredits()} Credits)</span>
-                  </div>
-                  <div className="flex items-baseline">
-                    <span>₹{calculateGSTInclusiveTotal()}</span>
-                  </div>
-                </div>
-              </div>
-              
-              <button 
-                onClick={handleCompletePurchase}
-                className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-              >
-                Complete Purchase
-              </button>
-            </div>
+  <div className="grid md:grid-cols-3 gap-8">
+    {/* Cart Summary */}
+    <div className="md:col-span-2">
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-800 mb-4">Cart Summary</h2>
+        
+        <div className="space-y-4 mb-6">
+          {cartItems.map((item) => {
+            const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
+            // Updated credit calculation: price divided by 10 instead of 100
+            const itemCredits = (inclusivePrice / 10).toFixed(2);
             
-            {/* Delivery Details Form */}
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h2 className="text-lg font-bold text-gray-800 mb-4">Delivery Details</h2>
-              
-              <div className="grid md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                  <input 
-                    type="text" 
-                    name="firstName"
-                    value={deliveryDetails.firstName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                  <input 
-                    type="text" 
-                    name="lastName"
-                    value={deliveryDetails.lastName}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input 
-                  type="email" 
-                  name="email"
-                  value={deliveryDetails.email}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            return (
+              <div key={`${item.id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4 pb-4 border-b">
+                <img 
+                  src={item.images[0]} 
+                  alt={item.name} 
+                  className="w-16 h-20 object-cover rounded"
                 />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                <input 
-                  type="tel" 
-                  name="phone"
-                  value={deliveryDetails.phone}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                <textarea 
-                  name="address"
-                  value={deliveryDetails.address}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                  <input 
-                    type="text" 
-                    name="city"
-                    value={deliveryDetails.city}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                  <input 
-                    type="text" 
-                    name="state"
-                    value={deliveryDetails.state}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
-                  <input 
-                    type="text" 
-                    name="zipCode"
-                    value={deliveryDetails.zipCode}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div className="flex-1">
+                  <h3 className="font-semibold">{item.name}</h3>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                   <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800 mt-2">
+                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                     </svg>
+                   Size: {item.selectedSize}
+                   </span>
+                   <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800 mt-2">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                     </svg>
+                      Color: {item.selectedColor}
+                      </span>
+                       <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800 mt-2">
+                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                      Qty: {item.quantity}
+                    </span>
+                    </div>
+                  <div className="flex items-center mb-4">
+                    <span className="font-semibold">₹{inclusivePrice * item.quantity}</span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 text-white ml-1 shadow-lg">
+                     {itemCredits * item.quantity} Credits
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            );
+          })}
+        </div>
+        
+        <div className="space-y-2 mb-6">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Total MRP (Inclusive of all taxes)</span>
+            <span className="font-semibold">₹{calculateGSTInclusiveTotal()}</span>
           </div>
-          
-          {/* Payment Section */}
-          <div>
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h2 className="text-lg font-bold text-gray-800 mb-4">Payment Method</h2>
-              
-              <div className="space-y-3 mb-6">
-                <button 
-                  onClick={() => handlePaymentMethodChange('card')}
-                  className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'card' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
-                >
-                  <CreditCard size={20} />
-                  <span className="font-medium">Card Payment</span>
-                </button>
-                
-                <button 
-                  onClick={() => handlePaymentMethodChange('upi')}
-                  className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'upi' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
-                >
-                  <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">U</div>
-                  <span className="font-medium">UPI</span>
-                </button>
-                
-                <button 
-                  onClick={() => handlePaymentMethodChange('wallet')}
-                  className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'wallet' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
-                >
-                  <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">W</div>
-                  <span className="font-medium">Platform Wallet</span>
-                </button>
-                
-                <button 
-                  onClick={() => handlePaymentMethodChange('credits')}
-                  className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'credits' ? 'border-blue-500 bg-blue-50' : canPayWithCredits ? 'border-gray-300' : 'border-gray-200 opacity-50 cursor-not-allowed'}`}
-                  disabled={!canPayWithCredits}
-                >
-                  <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">C</div>
-                  <div className="flex-1 text-left">
-                    <span className="font-medium">Credits</span>
-                    {!canPayWithCredits && (
-                      <p className="text-xs text-red-500">Insufficient credits</p>
-                    )}
-                  </div>
-                </button>
-              </div>
-              
-              {paymentMethod === 'card' && (
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
-                    <input 
-                      type="text" 
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                      <input 
-                        type="text" 
-                        placeholder="MM/YY"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                      <input 
-                        type="text" 
-                        placeholder="123"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {paymentMethod === 'upi' && (
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
-                    <input 
-                      type="text" 
-                      placeholder="yourname@upi"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors font-semibold">
-                      Google Pay
-                    </button>
-                    <button className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors font-semibold">
-                      PhonePe
-                    </button>
-                    <button className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors font-semibold">
-                      Paytm
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {paymentMethod === 'wallet' && (
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Wallet Type</label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option>Income Wallet</option>
-                      <option>E-Wallet</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Available Balance</label>
-                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                      <p className="text-green-800 font-semibold">₹5,000</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {paymentMethod === 'credits' && (
-                <div className="space-y-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Credits Information</label>
-                    <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
-                      <div className="flex justify-between mb-2">
-                        <span className="text-gray-700">Available Credits:</span>
-                        <span className="font-semibold text-purple-800">{userCredits}</span>
-                      </div>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-gray-700">Credits Required:</span>
-                        <span className="font-semibold text-purple-800">{calculateTotalCredits()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-700">Credits Remaining:</span>
-                        <span className="font-semibold text-purple-800">{userCredits - calculateTotalCredits()}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setCurrentPage('cart')}
-                  className="flex-1 py-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors font-semibold"
-                >
-                  Continue Shopping
-                </button>
-                <button 
-                  onClick={handleCompletePurchase}
-                  className="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold"
-                >
-                  Pay Now
-                </button>
-              </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Discount</span>
+            <span className="font-semibold text-green-600">-₹{calculateGSTInclusiveDiscount()}</span>
+          </div>
+          <div className="flex justify-between text-lg font-bold pt-2 border-t">
+            <div className="flex items-baseline">
+              <span>Total</span>
+              {/* Updated total credits calculation <span className="text-sm text-gray-500 ml-1">({(calculateGSTInclusiveTotal() / 10).toFixed(2)} Credits)</span> */}  
+            </div>
+            <div className="flex items-baseline">
+              <span>₹{calculateGSTInclusiveTotal()}</span>
             </div>
           </div>
         </div>
+        
+        <button 
+          onClick={handleCompletePurchase}
+          className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+        >
+          Complete Purchase
+        </button>
       </div>
+      
+      {/* Delivery Details Form */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h2 className="text-lg font-bold text-gray-800 mb-4">Delivery Details</h2>
+        
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+            <input 
+              type="text" 
+              name="firstName"
+              value={deliveryDetails.firstName}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+            <input 
+              type="text" 
+              name="lastName"
+              value={deliveryDetails.lastName}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input 
+            type="email" 
+            name="email"
+            value={deliveryDetails.email}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+          <input 
+            type="tel" 
+            name="phone"
+            value={deliveryDetails.phone}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <textarea 
+            name="address"
+            value={deliveryDetails.address}
+            onChange={handleInputChange}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+            <input 
+              type="text" 
+              name="city"
+              value={deliveryDetails.city}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+            <input 
+              type="text" 
+              name="state"
+              value={deliveryDetails.state}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+            <input 
+              type="text" 
+              name="zipCode"
+              value={deliveryDetails.zipCode}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    {/* Payment Section */}
+    <div>
+      <div className="bg-gray-50 rounded-lg p-6">
+        <h2 className="text-lg font-bold text-gray-800 mb-4">Payment Method</h2>
+        
+        <div className="space-y-3 mb-6">
+          <button 
+            onClick={() => handlePaymentMethodChange('card')}
+            className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'card' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+          >
+            <CreditCard size={20} />
+            <span className="font-medium">Card Payment</span>
+          </button>
+          
+          <button 
+            onClick={() => handlePaymentMethodChange('upi')}
+            className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'upi' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+          >
+            <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">U</div>
+            <span className="font-medium">UPI</span>
+          </button>
+          
+          <button 
+            onClick={() => handlePaymentMethodChange('wallet')}
+            className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'wallet' ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`}
+          >
+            <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold">W</div>
+            <span className="font-medium">Platform Wallet</span>
+          </button>
+          
+          <button 
+            onClick={() => handlePaymentMethodChange('credits')}
+            className={`w-full flex items-center gap-3 p-3 border rounded-md ${paymentMethod === 'credits' ? 'border-blue-500 bg-blue-50' : canPayWithCredits ? 'border-gray-300' : 'border-gray-200 opacity-50 cursor-not-allowed'}`}
+            disabled={!canPayWithCredits}
+          >
+            <div className="w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">C</div>
+            <div className="flex-1 text-left">
+              <span className="font-medium">Credits</span>
+              {!canPayWithCredits && (
+                <p className="text-xs text-red-500">Insufficient credits</p>
+              )}
+            </div>
+          </button>
+        </div>
+        
+        {paymentMethod === 'card' && (
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+              <input 
+                type="text" 
+                placeholder="1234 5678 9012 3456"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                <input 
+                  type="text" 
+                  placeholder="MM/YY"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                <input 
+                  type="text" 
+                  placeholder="123"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {paymentMethod === 'upi' && (
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
+              <input 
+                type="text" 
+                placeholder="yourname@upi"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors font-semibold">
+                Google Pay
+              </button>
+              <button className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors font-semibold">
+                PhonePe
+              </button>
+              <button className="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors font-semibold">
+                Paytm
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {paymentMethod === 'wallet' && (
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Wallet Type</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>Income Wallet</option>
+                <option>E-Wallet</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Available Balance</label>
+              <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-green-800 font-semibold">₹5,000</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {paymentMethod === 'credits' && (
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Credits Information</label>
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-700">Available Credits:</span>
+                  <span className="font-semibold text-purple-800">{userCredits}</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-700">Credits Required:</span>
+                  {/* Updated credits calculation */}
+                  <span className="font-semibold text-purple-800">{(calculateGSTInclusiveTotal() / 10).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-700">Credits Remaining:</span>
+                  {/* Updated credits calculation */}
+                  <span className="font-semibold text-purple-800">{(userCredits - (calculateGSTInclusiveTotal() / 10)).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex gap-3">
+          <button 
+            onClick={() => setCurrentPage('cart')}
+            className="flex-1 py-2 border border-gray-300 text-gray-600 rounded hover:bg-gray-50 transition-colors font-semibold"
+          >
+            Continue Shopping
+          </button>
+          <button 
+            onClick={handleCompletePurchase}
+            className="flex-1 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold"
+          >
+            Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
       
       <Footer />
     </div>
@@ -2938,33 +2984,64 @@ const OrderSummaryPage = ({ setCurrentPage }) => {
                   </div>
                   
                   <h3 className="font-bold text-gray-800 mb-3">Items in this Order</h3>
-                  
                   <div className="space-y-4">
-                    {latestOrder.items.map((item, index) => {
-                      const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
-                      
-                      return (
-                        <div key={index} className="flex gap-4 pb-4 border-b last:border-b-0 mb-1">
-                          <img 
-                            src={item.images[0]} 
-                            alt={item.name} 
-                            className="w-16 h-20 object-cover rounded"
-                          />
-                          <div className="flex-1">
-                            <h3 className="font-medium">{item.name}</h3>
-                            <p className="text-sm text-gray-500 mb-1">
-                              Size: {item.selectedSize}, Color: {item.selectedColor}, Qty: {item.quantity}
-                            </p>
-                            <div className="flex items-baseline">
-                              <span className="font-semibold">₹{inclusivePrice * item.quantity}</span>
-                              <span className="text-xs text-gray-500 ml-2 font-semibold">({item.credits * item.quantity} Credits)</span>
-                              <span className="text-xs text-gray-500 ml-2">(Inclusive of all taxes)</span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+  {latestOrder.items.map((item, index) => {
+    const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
+    // Calculate credits based on the new formula (price/10)
+    const itemCredits = (inclusivePrice / 10).toFixed(2);
+    
+    return (
+      <div key={index} className="flex gap-4 pb-4 border-b last:border-b-0 mb-1">
+        <img 
+          src={item.images[0]} 
+          alt={item.name} 
+          className="w-16 h-20 object-cover rounded"
+        />
+        <div className="flex-1">
+              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <p className="text-sm text-gray-500">{item.brand}</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  Size: {item.selectedSize}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  Color: {item.selectedColor}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  Qty: {item.quantity}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="font-bold text-lg">₹{inclusivePrice}</span>
+                  {item.originalPrice > item.price && (
+                    <span className="text-sm text-gray-500 line-through ml-2">₹{inclusiveOriginalPrice}</span>
+                  )}
+                  {item.originalPrice > item.price && (
+                    <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-bold">
+                      {discountPercentage}% OFF
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 text-white ml-1 shadow-lg">
+                    {itemCredits * item.quantity} Credits
+                  </span>
+                </div>
+              </div>
+            </div>
+      </div>
+    );
+  })}
+</div>
                 </div>
               </div>
               
@@ -3612,31 +3689,63 @@ const OrderTrackingPage = ({ setCurrentPage }) => {
               <h2 className="text-lg font-bold text-gray-800 mb-4">Items from this Order</h2>
               
               <div className="space-y-4">
-                {latestOrder.items.map((item, index) => {
-                  const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
-                  
-                  return (
-                    <div key={index} className="flex gap-4 pb-4 border-b last:border-b-0">
-                      <img 
-                        src={item.images[0]} 
-                        alt={item.name} 
-                        className="w-16 h-20 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-gray-500 mb-1">
-                          Size: {item.selectedSize}, Color: {item.selectedColor}, Qty: {item.quantity}
-                        </p>
-                        <div className="flex items-baseline">
-                          <span className="font-semibold">₹{inclusivePrice * item.quantity}</span>
-                          <span className="text-xs text-gray-500 ml-2 font-semibold mb-1">({item.credits * item.quantity} Credits)</span>
-                          <span className="text-xs text-gray-500 ml-2">(Inclusive of all taxes)</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+  {latestOrder.items.map((item, index) => {
+    const inclusivePrice = calculateGSTInclusivePrice(item.price, item.category);
+    // Calculate credits based on the new formula (price/10)
+    const itemCredits = (inclusivePrice / 10).toFixed(2);
+    
+    return (
+      <div key={index} className="flex gap-4 pb-4 border-b last:border-b-0">
+        <img 
+          src={item.images[0]} 
+          alt={item.name} 
+          className="w-16 h-20 object-cover rounded"
+        />
+        <div className="flex-1">
+              <h3 className="font-semibold text-lg">{item.name}</h3>
+              <p className="text-sm text-gray-500">{item.brand}</p>
+              <div className="flex flex-wrap gap-2 mt-1">
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  Size: {item.selectedSize}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  Color: {item.selectedColor}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-gray-100 text-gray-800">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  Qty: {item.quantity}
+                </span>
               </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="font-bold text-lg">₹{inclusivePrice}</span>
+                  {item.originalPrice > item.price && (
+                    <span className="text-sm text-gray-500 line-through ml-2">₹{inclusiveOriginalPrice}</span>
+                  )}
+                  {item.originalPrice > item.price && (
+                    <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded font-bold">
+                      {discountPercentage}% OFF
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 text-white ml-1 shadow-lg">
+                    {itemCredits * item.quantity} Credits
+                  </span>
+                </div>
+              </div>
+            </div>
+      </div>
+    );
+  })}
+</div>
             </div>
             
             {/* Billing Details */}
@@ -3706,6 +3815,25 @@ const CategoryPage = ({ category, setCurrentPage, searchQuery, setSearchQuery })
   });
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const companyDropdownRef = useRef(null);
+  // Add these state variables at the top of your component
+  const [deliveryPincode, setDeliveryPincode] = useState('');
+  const [deliveryInfo, setDeliveryInfo] = useState(null);
+
+  // Add this function to handle checking delivery availability
+  const checkDeliveryAvailability = (pincode) => {
+    if (!pincode || pincode.length < 6) {
+      alert('Please enter a valid pincode');
+      return;
+    }
+  
+    // Here you would typically make an API call to check delivery availability
+    // For now, I'm just showing a mock response
+    setDeliveryInfo({
+      estimatedDays: '3-5',
+      deliveryCharge: 'FREE',
+      returnAvailable: true
+    });
+  };
   
   const { addToCart, addToWishlist } = React.useContext(CartContext);
   
@@ -4139,7 +4267,7 @@ const CategoryPage = ({ category, setCurrentPage, searchQuery, setSearchQuery })
                    <span className="text-sm text-gray-500 ml-2 font-semibold">({selectedProduct.reviews || 100} reviews)</span>
                  </div>
                  
-                 <div className="flex items-center mb-4">
+                 <div className="flex items-center mb-2">
                    {(() => {
                      const inclusivePrice = calculateGSTInclusivePrice(selectedProduct.price, selectedProduct.category);
                      const inclusiveDiscountedPrice = selectedProduct.discountedPrice 
@@ -4249,6 +4377,44 @@ const CategoryPage = ({ category, setCurrentPage, searchQuery, setSearchQuery })
                          >
                            <span className="text-sm font-bold">Add to cart</span>
                          </button>
+                       </div>
+                       
+                       {/* Delivery Pincode Section */}
+                       <div className="mt-4 p-3 border border-gray-200 rounded-lg">
+                         <p className="text-sm font-bold mb-2">Delivery Pincode:</p>
+                         <div className="flex items-center">
+                           <input 
+                             type="text" 
+                             placeholder="Enter" 
+                             className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                             onChange={(e) => setDeliveryPincode(e.target.value)}
+                             value={deliveryPincode || ''}
+                           />
+                           <button 
+                             className="ml-2 px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                             onClick={() => checkDeliveryAvailability(deliveryPincode)}
+                           >
+                             Check
+                           </button>
+                         </div>
+                         {deliveryInfo && (
+                           <div className="mt-3 text-sm">
+                             <p className="text-green-600 font-medium mb-1">
+                               <span className="font-bold">Estimation:</span> {deliveryInfo.estimatedDays || '3-5'} business days
+                             </p>
+                             <p className="text-gray-600 font-medium mb-1">
+                               <span className="font-bold">Delivery charge:</span> {deliveryInfo.deliveryCharge || 'FREE'}
+                             </p>
+                             <p className="text-gray-600 font-medium mb-2">
+                               <span className="font-bold">Return and Exchange:</span> Available
+                             </p>
+                             <div className="bg-blue-50 p-2 rounded mt-2">
+                               <p className="text-xs text-blue-800">
+                                 Return a product and get the amount back as credits! Use them anytime for your next purchase and no expiry, no rush.
+                               </p>
+                             </div>
+                           </div>
+                         )}
                        </div>
                </div>
              </div>
@@ -7147,7 +7313,7 @@ const LandingPage = ({ setCurrentPage, setUserType, setIsLoggedIn, setShowAuth, 
       </section>
        
       {/* Category Links Section transition-transform duration-700 group-hover:scale-105 */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white-50 to-white-100">
+      <section className="py-2 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white-50 to-white-100">
       <div className="max-w-8xl mx-auto">
         <h2 className="text-2xl font-bold text-slate-900 mb-8">Shop by Category</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -7167,7 +7333,7 @@ const LandingPage = ({ setCurrentPage, setUserType, setIsLoggedIn, setShowAuth, 
               />
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-slate-800">Women</h3>
+              <h3 className="text-2xl font-semibold text-black-800">Women</h3>
             </div>
           </a>
           
@@ -7187,7 +7353,7 @@ const LandingPage = ({ setCurrentPage, setUserType, setIsLoggedIn, setShowAuth, 
               />
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-slate-800">Men</h3>
+              <h3 className="text-2xl font-semibold text-black-800">Men</h3>
             </div>
           </a>
 
@@ -7207,7 +7373,7 @@ const LandingPage = ({ setCurrentPage, setUserType, setIsLoggedIn, setShowAuth, 
               />
             </div>
             <div className="mt-4">
-              <h3 className="text-2xl font-bold text-slate-800">Accessories</h3>
+              <h3 className="text-2xl font-semibold text-black-800">Accessories</h3>
             </div>
           </a>
         </div>
@@ -7216,9 +7382,9 @@ const LandingPage = ({ setCurrentPage, setUserType, setIsLoggedIn, setShowAuth, 
       
       {/* Top Brands Section max-w-8xl mx-auto*/}
       <div className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
-          <div className="flex justify-between items-center mb-10">
+          <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold text-slate-900">Explore Brands</h2>
-               <a  href="/see-all-brands" className="group inline-flex items-center text-lg font-bold text-slate-900 hover:text-slate-600 transition-all">
+               <a  href="/see-all-brands" className="group inline-flex items-center text-lg font-semibold text-slate-900 hover:text-slate-600 transition-all">
                    View all
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
@@ -7340,7 +7506,7 @@ const LandingPage = ({ setCurrentPage, setUserType, setIsLoggedIn, setShowAuth, 
       </div>
 
       {/* Men's Popular Categories */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py- px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-8xl mx-auto">
           
           {/* Section Header */}
